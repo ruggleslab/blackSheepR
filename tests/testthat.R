@@ -1,4 +1,4 @@
 library(testthat)
-library(BlackSheep)
+library(blackSheepR)
 
-test_check("BlackSheep")
+test_check("blackSheepR")

@@ -1,4 +1,4 @@
-Package: BlackSheep
+Package: blackSheepR
 Type: Package
 Title: Outlier Analysis for pairwise differential comparison
 Version: 0.99.0

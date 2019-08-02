@@ -1,5 +1,5 @@
-context("BlackSheep Functions")
-library(BlackSheep)
+context("blackSheepR Functions")
+library(blackSheepR)
 
 test_that("grouping function works", {
     data("sample_annotations")
