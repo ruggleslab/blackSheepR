@@ -20,8 +20,8 @@
 #' data("sample_annotations")
 #' new_comparisons = make_comparison_columns(sample_annotations[,1,drop=FALSE])
 make_comparison_columns <- function(intable){
-    ## Create empty outtable
-    outtable = c()
+    ## Create empty outtablelist
+    outtablelist = list()
     ## Run through each inputted column
     for (i in seq_len(ncol(intable))) {
         ## Pull out the rownames and column names to save for later
@@ -29,8 +29,8 @@ make_comparison_columns <- function(intable){
         categoryname = colnames(intable)[i]
 
         ## Select the column we are working with
-        intable = apply(intable, 2, as.character)
         subtable = intable[,i, drop=FALSE]
+        subtable = apply(subtable, 2, as.character)
 
         ## Create duplicate columns - one for each subcategory
         new_comp_tab = matrix(rep(subtable, length(unique(subtable[,1]))),
@@ -47,10 +47,11 @@ make_comparison_columns <- function(intable){
         ## Add back the column name, and then save out
         colnames(new_comp_tab) = paste0(categoryname, "_",
                                         colnames(new_comp_tab))
-        outtable = cbind(outtable, new_comp_tab)
+        outtablelist[[i]] = new_comp_tab
 
     }
-    return(new_comp_tab)
+    output = do.call(cbind, outtablelist)
+    return(output)
 }
 
 
@@ -75,7 +76,7 @@ comparison_groupings <- function(comptable) {
     comptable = apply(comptable,2,as.character)
     rownames(comptable) = featurenames
     for (i in seq_len(ncol(comptable))) {
-        # Select column and create coparison based off entries in column
+        # Select column and create comparison based off entries in column
         subsamp = comptable[,i, drop=FALSE]
         subsamp[subsamp == ""] <- NA ## Failsafe to turn blank cells into NA
         subcats = unique(na.omit(subsamp[,1]))
@@ -97,7 +98,7 @@ comparison_groupings <- function(comptable) {
     ## Define the output
     return(groupings)
 }
-#groupings = comparison_groupings(comptable)
+
 
 
 
@@ -137,16 +138,16 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
     outlist = uppboundlist = lowboundlist = sampmedlist = list()
     for (intablegenecount in seq_len(nrow(intable))) {
 
-        ## Save the sampname, then subset the table to just the one sample
+        ## Save the sampname, then subset the table to just the one gene
         genename = rownames(intable)[intablegenecount]
         sampdat = as.data.frame(t(intable[intablegenecount, , drop=FALSE]))
 
         ## Set upper and lower bounds based off of the IQR and med
         ## Save upper and lower bound, and med to a list we then tabulate
-        sampmedlist[[intablegenecount]] = sampmed = median(sampdat[,1],
-                                                            na.rm=TRUE)
-        uppboundlist[[intablegenecount]] = uppbound = sampmed +
-            1.5*IQR(sampdat[,1], na.rm = TRUE)
+        sampmedlist[[intablegenecount]] = sampmed =
+            median(sampdat[,1],na.rm=TRUE)
+        uppboundlist[[intablegenecount]] = uppbound =
+            sampmed + 1.5*IQR(sampdat[,1], na.rm = TRUE)
         names(sampmedlist)[intablegenecount] =
             names(uppboundlist)[intablegenecount] = genename
 
@@ -158,8 +159,8 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
 
         ## Return negative information if param is TRUE
         if (analyze_negative_outliers == TRUE) {
-            lowboundlist[[intablegenecount]] = lowbound = sampmed -
-                1.5*IQR(sampdat[,1], na.rm = TRUE)
+            lowboundlist[[intablegenecount]] = lowbound =
+                sampmed - 1.5*IQR(sampdat[,1], na.rm = TRUE)
             names(lowboundlist)[intablegenecount] = genename
             sampdat[!is.na(sampdat[,1]) & sampdat[,1] < lowbound,2] <- -1
             } else { lowboundlist = NULL}
@@ -194,8 +195,8 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
     ## Return the outputted values
     # outliertab where the intable has been turned into a reference table of
     # whether or not the gene is sig high, low, or none
-    # upboundtab - upperbound of signifigance for each of the genes
-    # downboundtab - lowerbound of signifigance for each of the genes
+    # upperboundtab - upperbound of signifigance for each of the genes
+    # lowerboundtab - lowerbound of signifigance for each of the genes
     # sampmeantab - the average value for each of the genes
     return(output)
 }
@@ -204,14 +205,14 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
 ## TABULATE OUTLIER DATA on a per gene basis for each of our subgroups
 #' Count up the outlier information for each of the groups you have made.
 #' If aggregating then you will have to turn the parameter on, but you still
-#'     input the outliertable. Aggregate needs to count the total number of
+#'     input the outliertable. Aggregate will count the total number of
 #'     outliers AND nonoutliers in its operation, so it needs the original
 #'     outlier table made by the <make_outlier_table> function.
 #' @param groupings table generated by the comparison_groupings function
 #' @param outliertab outlier table generated by make_outlier_table
-#' @param analyze_negative_outliers DEFAULT: FALSE; analyze negative outliers in
-#'     addition to positive outliers, NOTE - this MUST BE SET TO TRUE if using
-#'     an aggregate negative table to get a result
+#' @param analyze_negative_outliers DEFAULT: FALSE; analyze negative outliers.
+#'     Analysis from this point forward needs to be done in a positive OR
+#'     negative direction.
 #' @param aggregate_features DEFAULT: FALSE; Toggle the Aggregate feature, which
 #'     will aggregate features in your table based on the given delineator.
 #'     Aggregation will output counts for the TOTAL number of outliers and non-
@@ -588,7 +589,7 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
         GOI = intable[rowSums(fdrcols < fdrcutoffvalue) >= 1,1]
 
         if (length(GOI) > 0) {
-            print("GOI")
+            #print("GOI")
             ## Take the metatable, order it by 1s and then 2s on whatever
             ## comparison we are doing, take comparison columns for plotting
             ## Added in as.character as a failsafe
@@ -609,9 +610,11 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
             heatmaplist[analysiscount] = list(hm1)
             names(heatmaplist)[analysiscount] = paste0("print_",
                                 names(outlier_analysis_out)[analysiscount])
-        } else {print(paste("No Significant Outliers for ",
-            names(outlier_analysis_out)[analysiscount],
-            " at an FDR cut off value of ", fdrcutoffvalue, sep = ""))}
+        } else {
+            #print(paste("No Significant Outliers for ",
+            #names(outlier_analysis_out)[analysiscount],
+            #" at an FDR cut off value of ", fdrcutoffvalue, sep = ""))
+            }
     }
     return(Filter(Negate(is.null), heatmaplist))
 }
@@ -668,21 +671,54 @@ blacksheep <- function(counttable, metatable, analyze_negative_outliers = FALSE,
     lowerboundtab = reftable_function_out$lowerboundtab
     sampmedtab = reftable_function_out$sampmedtab
 
+    ## If there is no aggregation of features - then just run through normal
+    ## analysis, outputting whats parameterized, withoutput as hm and tables
+    ## Running through positive and negative side if necessary
     if (aggregate_features == FALSE) {
-        count_outliers_out = count_outliers(groupings, outliertab)
-        grouptablist = count_outliers_out$grouptablist
-        outlier_analysis_out = outlier_analysis(grouptablist,
+        ## Positive/nonaggregated workflow
+        pos_count_outliers_out = count_outliers(groupings, outliertab)
+        posgrouptablist = pos_count_outliers_out$grouptablist
+        pos_outlier_analysis_out = outlier_analysis(posgrouptablist,
                                             write_out_tables = write_out)
-        pos_outlier_analysis_out = neg_outlier_analysis_out = NULL
 
-        hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out,
+        hm1 = outlier_heatmap(outlier_analysis_out = pos_outlier_analysis_out,
                         analysis_num = NULL, counttab = counttable,
                         metatable = metatable, fdrcutoffvalue = 0.1,
                         write_out_plot = write_out)
 
-        return(list(outlier_analysis = outlier_analysis_out))
+        ## Negative/nonaggregated workflow
+        if (analyze_negative_outliers == TRUE) {
+            neg_count_outliers_out = count_outliers(groupings, outliertab,
+                aggregate_features = FALSE, analyze_negative_outliers = TRUE)
+            neggrouptablist = neg_count_outliers_out$grouptablist
+            negaggfractiontab = neg_count_outliers_out$aggfractiontab
+
+            neg_outlier_analysis_out = outlier_analysis(
+                grouptablist = neggrouptablist,
+                fraction_table = negaggfractiontab,
+                fraction_samples_cutoff = 0.3,
+                write_out_tables = write_out)
+
+            hm2 = outlier_heatmap(outlier_analysis_out =
+                            neg_outlier_analysis_out,
+                            analysis_num = NULL, counttab = negaggfractiontab,
+                            metatable = metatable, fdrcutoffvalue = 0.1,
+                            write_out_plot = write_out)
+        }
+
+        ## Return the output - parameterized to output pos/neg as appropriate
+        if (analyze_negative_outliers != TRUE) {
+            return(list(pos_outlier_analysis = pos_outlier_analysis_out,
+                        significant_pos_heatmaps = hm1))
+        } else {
+            return(list(pos_outlier_analysis = pos_outlier_analysis_out,
+                        significant_pos_heatmaps = hm1,
+                        neg_outlier_analysis = neg_outlier_analysis_out,
+                        significant_neg_heatmaps = hm2))
+        }
 
     } else {
+        ## With feature aggregation - we do positive and negative separtely
         outlier_analysis_out = NULL
         pos_count_outliers_out = count_outliers(groupings, outliertab,
                                                 aggregate_features = TRUE)
@@ -717,8 +753,15 @@ blacksheep <- function(counttable, metatable, analyze_negative_outliers = FALSE,
                             write_out_plot = write_out)
         }
 
-        return(list(positive_outlier_analysis = pos_outlier_analysis_out,
-                negative_outlier_analysis = neg_outlier_analysis_out))
+        if (analyze_negative_outliers != TRUE) {
+            return(list(pos_outlier_analysis = pos_outlier_analysis_out,
+                        significant_pos_heatmaps = hm1))
+        } else {
+            return(list(pos_outlier_analysis = pos_outlier_analysis_out,
+                        significant_pos_heatmaps = hm1,
+                        neg_outlier_analysis = neg_outlier_analysis_out,
+                        significant_neg_heatmaps = hm2))
+        }
     }
 
 }

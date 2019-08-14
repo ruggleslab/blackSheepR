@@ -52,7 +52,7 @@ library(blackSheepR)
 Count data should be a table of counts with samples along the x-axis, and 
 features along the y-axis, with the labels being rownames and colnames.
 
-```{r countdata example, echo=FALSE}
+```{r countdata example}
 library(blackSheepR)
 data("sample_values")
 sample_values[1:5,1:5]
@@ -65,7 +65,7 @@ perform, with the values of the column being some form of binary system
 indicating the samples belonging to each sub group.
 NOTE - that these should be strings. It's more informative if your columns 
 actually contain useful information such as "high"/"low", "mutant"/"WT", etc.
-```{r annotation example, echo=FALSE}
+```{r annotation example}
 data("sample_annotations")
 sample_annotations[1:5,1:5]
 ```
@@ -77,20 +77,18 @@ analysis using RNA data. The inputted data is being supplied from
 [Github](https://github.com/ruggleslab/blacksheep_supp/tree/master) and is from 
 breast cancer data from TCGA and CPTAC.  
 
-#### Read in Data
-Read in the RNA and Annotation table, selecting the last 5 columns of the 
-annotation data to be used as comparison columns. We will also define a variable
+### Read in Data
+Read in the RNA and Annotation table. We will also define a variable
 `outfilepath` which is used in a number of functions as a location to save data 
-out to
+out to. Examples Below of the tables we will be using:
 ```{r read in data - rna, echo = FALSE}
 annotationfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
                         "outlier-tool/data/brca/annotations_common_samples.csv")
 annotationtable = read.table(annotationfile, header = TRUE, row.names = 1, 
                 na.strings = c("", " ", "NA"), sep = ",", check.names = FALSE)
-comptable = annotationtable[,(ncol(annotationtable)-4):ncol(annotationtable)]
-colnames(comptable) = c("PIK3CA_helical_mutant", "PIK3CA_kinase_mutant", 
-                        "TP53_Nonsense", "TP53_Missense_all", 
-                        "TP53_Missense_DNABD")
+colnames(annotationtable) = gsub(" ", "_", colnames(annotationtable))
+compcols = annotationtable[,c("PAM50", "ER_Status", "PR_Status",
+                        "GATA3_Mutation", "PIK3CA_Mutation", "TP53_Mutation")]
 
 rnacountfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/",
                       "data/brca/rna_common_samples_data.csv")
@@ -101,8 +99,8 @@ outfilepath = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/",
                      "output_VIGNETTE/")
 dir.create(outfilepath, recursive = TRUE, showWarnings = FALSE)
 
-comptable[1:5,1:5]
-dim(comptable)
+compcols[1:5,1:5]
+dim(compcols)
 rnatable[1:5,1:5]
 dim(rnatable)
 print("Testing for existance of outfilepath; <dir.exists(outfilepath)>")
@@ -110,7 +108,35 @@ dir.exists(outfilepath)
 
 ```
 
-#### Create groupings
+#### Formatting our annotation data
+Before we continue, we are going to format our annotation data to be ready for
+further analysis. The driving concept behind this work is to have a PAIRWISE 
+analysis, so we are going to format our data into readable pairwise information.
+
+First - we are going to manually make a few edits to change our columns into 
+binary metrics - "mutant" and "none"
+
+``` {r format annotation data1 - rna} 
+## FORMAT our annotation table
+compcols[,4] = ifelse(is.na(compcols[,4]), "None", "Mutant")
+compcols[,5] = ifelse(is.na(compcols[,5]), "None", "Mutant")
+compcols[,6] = ifelse(is.na(compcols[,6]), "None", "Mutant")
+head(compcols)
+```
+
+Then we are going to use a built in utility function `make_comparison_columns` 
+to help turn a multifactor column into several binary columns
+
+``` {r format annotation data2 - rna}
+## Use the make_comparison_columns function to create binary columns
+expanded_compcols = make_comparison_columns(compcols[,1,drop=FALSE])
+## Append new columns to the comparison annotation table
+comptable = cbind(expanded_compcols, compcols[2:ncol(compcols)])
+head(comptable)
+```
+
+
+### Create groupings
 Create the subgroups based on your metadata. Note that the 
 `comparison_groupings` function creates groups by going through the comparison 
 columns, and creating the first subgroup for all of the comparisons, and then 
@@ -125,7 +151,7 @@ lapply(groupings, head)[1:5]
 
 ```
 
-#### Make Outlier table
+### Make Outlier table
 The next function `make_outlier_table` will take in the countdata and output a 
 table that has been converted to show outliers. A value of 0 means that it was 
 not an outlier, 1 means it was an outlier in the positive direction, and if the 
@@ -133,8 +159,8 @@ parameter is set to analyze negative outliers, then -1 means an outlier in the
 negative direction.
 
 The output from this function is a list of objects, that depends on the input 
-and the specified parameters. For RNA, we will leave the `aggregate_features` 
-parameter `FALSE` (which is its default) and NOT analyze the negative outliers
+and the specified parameters. Namely - it will output a $lowerboundtab only
+if the parameter to analyze negative outliers is turned ON
 
 ```{r make outlier table - rna}
 ## Perform the function
@@ -151,26 +177,47 @@ outliertab[1:5,1:5]
 
 ```
 
-#### Tabulate Outliers
+### Tabulate Outliers
 For each of our groups, run through the outlier table and count up the total 
-number of outliers and nonoutliers
-```{r groupingtablist - rna, eval=FALSE}
-grouptablist = count_outliers(groupings, outliertab)
-lapply(grouptablist, head)[1:5]
+number of outliers and nonoutliers. Note that this will output a list of length
+1 - just with the name "grouptablist". In later iterations, parameters will 
+enable different output. For now though - we are just going to use this single
+embedded list
+```{r groupingtablist - rna}
+count_outliers_out = count_outliers(groupings, outliertab)
+grouptablist = count_outliers_out$grouptablist
+
+names(grouptablist)
 ```
 
-#### Run Outlier Analysis
+Each tabulated table has the feature counts, and the stored infor the samples 
+that went into the count
+```{r}
+names(grouptablist[[1]])
+```
+Example of what the feature counts look like:
+```{r}
+head(grouptablist[[1]][[1]])
+```
+Example of what the samples are that went into the analysis:
+```{r}
+grouptablist[[1]][[2]]
+```
+
+
+### Run Outlier Analysis
 With the tabulated tables, run the outlier analysis to look for enrichment of 
 outliers between groups. NOTE that this function has a functionality built in 
 to write out tables to the external file, we will not use this parameter now, 
 but it can be set by turning the to parameter `write_out_tables = TRUE`
-```{r outlier analysis - rna, eval=FALSE}
+```{r outlier analysis - rna}
+## Run the outlier analysis function
 outlier_analysis_out = outlier_analysis(grouptablist)
 names(outlier_analysis_out)
-lapply(outlier_analysis_out, head)[1:5]
+lapply(outlier_analysis_out, head)[1]
 ```
 
-#### Plot Results using Heatmap Generating Function
+### Plot Results using Heatmap Generating Function
 After you have your results, its useful to have a snapshot of your results in a 
 figure. blackSheepR includes a utility function to output a heatmap with custom 
 annotations and data. Use the plotting function with the original annotation 
@@ -179,16 +226,18 @@ The outlier_analysis object is used to select the differential genes.
 NOTE that you can write out the plot directly in the function using the given 
 parameter `write_out_plot` or the saved object from the function is a heatmap, 
 so you can open your own pdf and print out using the commented out code below.
-```{r heatmap plotting - rna, eval=FALSE}
+```{r heatmap plotting - rna, fig.keep="none"}
 hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out, 
-                      counttab = rnatable, metatable = annotationtable, 
+                      counttab = rnatable, metatable = comptable, 
                       fdrcutoffvalue = 0.1)
-hm1
 
 ## To output heatmap to pdf outside of the function
 #pdf(paste0(outfilepath, "test_hm1.pdf"))
 #hm1
 #junk<-dev.off()
+```
+```{r heatmap plotting 1example - rna}
+hm1[[1]]
 ```
 
 
@@ -198,12 +247,14 @@ hm1
 
 # Example Workflow - Phosphoprotein
 In the following section - we will go through an example of using outlier 
-analysis using RNA data. The inputted data is being supplied from 
+analysis using Phosphoprotein data. The inputted data is being supplied from 
 [Github](https://github.com/ruggleslab/blacksheep_supp/tree/master) and is from 
-breast cancer data from TCGA and CPTAC.  
+breast cancer data from TCGA and CPTAC.
+NOTE - that this analysis is more complicated then RNA due to the additional 
+functionality of aggregating together multiple phospho sites per protein.
 
-#### Read in Data
-Read in the RNA and Annotation table, selecting the last 5 columns of the 
+### Read in Data
+Read in the Phospho and Annotation table, selecting the last 5 columns of the 
 annotation data to be used as comparison columns. We will also define a variable
 `outfilepath` which is used in a number of functions as a location to save data 
 out to
@@ -212,10 +263,9 @@ annotationfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
                         "outlier-tool/data/brca/annotations_common_samples.csv")
 annotationtable = read.table(annotationfile, header = TRUE, row.names = 1, 
                 na.strings = c("", " ", "NA"), sep = ",", check.names = FALSE)
-comptable = annotationtable[,(ncol(annotationtable)-4):ncol(annotationtable)]
-colnames(comptable) = c("PIK3CA_helical_mutant", "PIK3CA_kinase_mutant", 
-                        "TP53_Nonsense", "TP53_Missense_all", 
-                        "TP53_Missense_DNABD")
+colnames(annotationtable) = gsub(" ", "_", colnames(annotationtable))
+compcols = annotationtable[,c("PAM50", "ER_Status", "PR_Status",
+                        "GATA3_Mutation", "PIK3CA_Mutation", "TP53_Mutation")]
 
 phosphocountfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
                     "outlier-tool/data/brca/phospho_common_samples_data.csv")
@@ -226,16 +276,42 @@ outfilepath = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/",
                      "output_VIGNETTE/")
 dir.create(outfilepath, recursive = TRUE, showWarnings = FALSE)
 
-comptable[1:5,1:5]
-dim(comptable)
-phosphotable[1:5,1:5]
+compcols[1:5,1:5]
+dim(compcols)
+rnatable[1:5,1:5]
 dim(rnatable)
 print("Testing for existance of outfilepath; <dir.exists(outfilepath)>")
 dir.exists(outfilepath)
 
 ```
 
-#### Create groupings
+### Formatting our annotation data
+Before we continue, we are going to format our annotation data to be ready for
+further analysis. The driving concept behind this work is to have a PAIRWISE 
+analysis, so we are going to format our data into readable pairwise information.
+
+First - we are going to manually make a few edits to change our columns into 
+binary metrics - "mutant" and "none"
+
+``` {r format annotation data1 - phospho} 
+## FORMAT our annotation table
+compcols[,4] = ifelse(is.na(compcols[,4]), "None", "Mutant")
+compcols[,5] = ifelse(is.na(compcols[,5]), "None", "Mutant")
+compcols[,6] = ifelse(is.na(compcols[,6]), "None", "Mutant")
+head(compcols)
+```
+Then we are going to use a built in utility function `make_comparison_columns` 
+to help turn a multifactor column into several binary columns
+
+``` {r format annotation data2 - phospho}
+## Use the make_comparison_columns function to create binary columns
+expanded_compcols = make_comparison_columns(compcols[,1,drop=FALSE])
+## Append new columns to the comparison annotation table
+comptable = cbind(expanded_compcols, compcols[2:ncol(compcols)])
+head(comptable)
+```
+
+### Create groupings
 Create the subgroups based on your metadata. Note that the 
 `comparison_groupings` function creates groups by going through the comparison 
 columns, and creating the first subgroup for all of the comparisons, and then 
@@ -247,15 +323,34 @@ in the ouput table to avoid confusion, more on this later.
 groupings = comparison_groupings(comptable)
 ## Print out the first 6 samples in each of our first 5 groupings
 lapply(groupings, head)[1:5]
-
 ```
 
-#### Make Outlier table
+### Make Outlier table
 The next function `make_outlier_table` will take in the countdata and output a 
 table that has been converted to show outliers. A value of 0 means that it was 
 not an outlier, 1 means it was an outlier in the positive direction, and if the 
 parameter is set to analyze negative outliers, then -1 means an outlier in the 
 negative direction.
+
+```{r make outlier table - phospho}
+## Perform the function
+reftable_function_out = make_outlier_table(phosphotable)
+## See the names of the outputted objects
+names(reftable_function_out)
+## Assign them to individual variables
+outliertab = reftable_function_out$outliertab
+upperboundtab = reftable_function_out$upperboundtab
+sampmedtab = reftable_function_out$sampmedtab
+
+## Note we will only use the outlier table - which looks like this now
+outliertab[1:5,1:5]
+```
+
+### Tabulate Outliers
+For each of our groups, run through the outlier table and count up the total 
+number of outliers and nonoutliers. For phospho (And this example) we are going 
+to use the AGGREGATION FUNCTION to aggregate our counts together on a per 
+protein basis
 
 The output from this function is a list of objects, that depends on the input 
 and the specified parameters. For Phosphoprotein - you can have data that has 
@@ -268,40 +363,37 @@ Feature 1
 
 The output with `aggregate_features = TRUE` will contain two additional 
 objects. It will output the normal outliertable, and boundary tables, and also 
-the "aggposoutlierstab" and "aggposfractiontab"
-The "aggposoutlierstab" will be the collapsed table, summing up the number of 
+the "aggoutlierstab" and "aggfractiontab"
+The "aggoutlierstab" will be the collapsed table, summing up the number of 
 outliers per feature
 The "aggfractiontab" returns the % outliers per feature per sample, given 
-available information
+available information - this will be IMPORTANT FOR FURTHER FILTERING later on.
 ex) 1,0,0 >> 1/3
 ex) 1,0,NA >> 1/2
 
-```{r make outlier table - phospho}
-## Perform the function
-reftable_function_out = make_outlier_table(phosphotable)
-## See the names of the outputted objects
-names(reftable_function_out)
-## Assign them to individual variables
-outliertab = reftable_function_out$outliertab
-upperboundtab = reftable_function_out$upperboundtab
-sampmedtab = reftable_function_out$sampmedtab
-aggposoutlierstab = reftable_function_out$aggposoutlierstab
-aggposfractiontab = reftable_function_out$aggposfractiontab
+```{r groupingtablist - phospho}
+count_outliers_out = count_outliers(groupings, outliertab, 
+                        aggregate_features = TRUE, feature_delineator = "-")
+grouptablist = count_outliers_out$grouptablist
+aggoutliertab = count_outliers_out$aggoutliertab
+aggfractiontab = count_outliers_out$aggfractiontab
 
-## Note we will only use the outlier table - which looks like this now
-outliertab[1:5,1:5]
-aggposoutlierstab[1:5,1:5]
-aggposfractiontab[1:5,1:5]
-
+names(grouptablist)
 ```
 
-#### Tabulate Outliers
-For each of our groups, run through the outlier table and count up the total 
-number of outliers and nonoutliers. For phospho (And this example) we are going 
-to use the AGGREGATED phospho table
-```{r groupingtablist - phospho, eval=FALSE}
-grouptablist = count_outliers(groupings, aggposoutlierstab)
-lapply(grouptablist, head)[1:5]
+Each tabulated table has the feature counts, and the stored infor the samples 
+that went into the count
+```{r}
+names(grouptablist[[1]])
+```
+Example of what the feature counts look like:
+```{r}
+head(grouptablist[[1]][[1]])
+```
+
+Example of what the samples are that went into the analysis:
+```{r}
+grouptablist[[1]][[2]]
 ```
 
 #### Run Outlier Analysis
@@ -309,10 +401,25 @@ With the tabulated tables, run the outlier analysis to look for enrichment of
 outliers between groups. NOTE that this function has a functionality built in 
 to write out tables to the external file, we will not use this parameter now, 
 but it can be set by turning the to parameter `write_out_tables = TRUE`
-```{r outlier analysis - phospho, eval=FALSE}
-outlier_analysis_out = outlier_analysis(grouptablist)
+
+In this outlier analysis - we will have an additional filter included. The 
+`aggfractiontab` outputted in the previous step has a metric that measure the 
+number of samples in each group that have an outlier in them. In this next step 
+we will use this information to filter for features that only have at least 
+`0.3` (30%) of samples with an outlier. This filter is important because our 
+aggregation step collapsed all of the sites down from each sample, and then we 
+counted the total. If one sample had ALL of its sites as outliers - while 
+interesting - this does not indicate the our entire ingroup has an 
+overrepresentation - just that one sample. This filter enables a clearer 
+analysis by only picking out features that have multiple samples with outliers.
+NOTE that this can be omitted by just leaving the `fraction_table` parameter 
+out or as a `NULL`
+```{r outlier analysis - phospho}
+outlier_analysis_out = outlier_analysis(grouptablist,
+                                        fraction_table = aggfractiontab,
+                                        fraction_samples_cutoff = 0.3)
 names(outlier_analysis_out)
-lapply(outlier_analysis_out, head)[1:5]
+lapply(outlier_analysis_out, head)[1]
 ```
 
 #### Plot Results using Heatmap Generating Function
@@ -326,11 +433,10 @@ The outlier_analysis object is used to select the differential genes.
 NOTE that you can write out the plot directly in the function using the given 
 parameter `write_out_plot` or the saved object from the function is a heatmap, 
 so you can open your own pdf and print out using the commented out code below.
-```{r heatmap plotting - phospho, eval=FALSE}
+```{r heatmap plotting - phospho, fig.keep="none"}
 hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out, 
-                counttab = aggposfractiontab, metatable = annotationtable, 
+                counttab = aggfractiontab, metatable = comptable, 
                 fdrcutoffvalue = 0.1)
-hm1
 
 ## To output heatmap to pdf outside of the function
 #pdf(paste0(outfilepath, "test_hm1.pdf"))
@@ -338,6 +444,9 @@ hm1
 #junk<-dev.off()
 ```
 
+```{r heatmap plotting 1example - phospho}
+hm1[[1]]
+```
 
 
 

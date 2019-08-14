@@ -21,8 +21,8 @@ annotationtable = read.table(annotationfile, header = TRUE, row.names = 1,
                 na.strings = c("", " ", "NA"), sep = ",", check.names = FALSE,
                 stringsAsFactors = FALSE)
 colnames(annotationtable) = gsub(" ", "_", colnames(annotationtable))
-compcols = annotationtable[,c("PAM50", "ER Status", "PR Status",
-                        "GATA3 Mutation", "PIK3CA Mutation", "TP53 Mutation")]
+compcols = annotationtable[,c("PAM50", "ER_Status", "PR_Status",
+                        "GATA3_Mutation", "PIK3CA_Mutation", "TP53_Mutation")]
 
 ## FORMAT our annotation table
 compcols[,4] = ifelse(is.na(compcols[,4]), "None", "Mutant")

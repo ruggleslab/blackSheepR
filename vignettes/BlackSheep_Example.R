@@ -10,12 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ## ----library call--------------------------------------------------------
 library(blackSheepR)
 
-## ----countdata example, echo=FALSE---------------------------------------
+## ----countdata example---------------------------------------------------
 library(blackSheepR)
 data("sample_values")
 sample_values[1:5,1:5]
 
-## ----annotation example, echo=FALSE--------------------------------------
+## ----annotation example--------------------------------------------------
 data("sample_annotations")
 sample_annotations[1:5,1:5]
 
@@ -24,10 +24,9 @@ annotationfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
                         "outlier-tool/data/brca/annotations_common_samples.csv")
 annotationtable = read.table(annotationfile, header = TRUE, row.names = 1, 
                 na.strings = c("", " ", "NA"), sep = ",", check.names = FALSE)
-comptable = annotationtable[,(ncol(annotationtable)-4):ncol(annotationtable)]
-colnames(comptable) = c("PIK3CA_helical_mutant", "PIK3CA_kinase_mutant", 
-                        "TP53_Nonsense", "TP53_Missense_all", 
-                        "TP53_Missense_DNABD")
+colnames(annotationtable) = gsub(" ", "_", colnames(annotationtable))
+compcols = annotationtable[,c("PAM50", "ER_Status", "PR_Status",
+                        "GATA3_Mutation", "PIK3CA_Mutation", "TP53_Mutation")]
 
 rnacountfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/",
                       "data/brca/rna_common_samples_data.csv")
@@ -38,13 +37,27 @@ outfilepath = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/",
                      "output_VIGNETTE/")
 dir.create(outfilepath, recursive = TRUE, showWarnings = FALSE)
 
-comptable[1:5,1:5]
-dim(comptable)
+compcols[1:5,1:5]
+dim(compcols)
 rnatable[1:5,1:5]
 dim(rnatable)
 print("Testing for existance of outfilepath; <dir.exists(outfilepath)>")
 dir.exists(outfilepath)
 
+
+## ----format annotation data1 - rna---------------------------------------
+## FORMAT our annotation table
+compcols[,4] = ifelse(is.na(compcols[,4]), "None", "Mutant")
+compcols[,5] = ifelse(is.na(compcols[,5]), "None", "Mutant")
+compcols[,6] = ifelse(is.na(compcols[,6]), "None", "Mutant")
+head(compcols)
+
+## ----format annotation data2 - rna---------------------------------------
+## Use the make_comparison_columns function to create binary columns
+expanded_compcols = make_comparison_columns(compcols[,1,drop=FALSE])
+## Append new columns to the comparison annotation table
+comptable = cbind(expanded_compcols, compcols[2:ncol(compcols)])
+head(comptable)
 
 ## ----groupings - rna-----------------------------------------------------
 groupings = comparison_groupings(comptable)
@@ -67,34 +80,47 @@ outliertab[1:5,1:5]
 
 
 ## ----groupingtablist - rna-----------------------------------------------
-grouptablist = count_outliers(groupings, outliertab)
-lapply(grouptablist, head)[1:5]
+count_outliers_out = count_outliers(groupings, outliertab)
+grouptablist = count_outliers_out$grouptablist
+
+names(grouptablist)
+
+## ------------------------------------------------------------------------
+names(grouptablist[[1]])
+
+## ------------------------------------------------------------------------
+head(grouptablist[[1]][[1]])
+
+## ------------------------------------------------------------------------
+grouptablist[[1]][[2]]
 
 ## ----outlier analysis - rna----------------------------------------------
+## Run the outlier analysis function
 outlier_analysis_out = outlier_analysis(grouptablist)
 names(outlier_analysis_out)
-lapply(outlier_analysis_out, head)[1:5]
+lapply(outlier_analysis_out, head)[1]
 
-## ----heatmap plotting - rna----------------------------------------------
+## ----heatmap plotting - rna, fig.keep="none"-----------------------------
 hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out, 
-                      counttab = rnatable, metatable = annotationtable, 
+                      counttab = rnatable, metatable = comptable, 
                       fdrcutoffvalue = 0.1)
-hm1
 
 ## To output heatmap to pdf outside of the function
 #pdf(paste0(outfilepath, "test_hm1.pdf"))
 #hm1
 #junk<-dev.off()
 
+## ----heatmap plotting 1example - rna-------------------------------------
+hm1[[1]]
+
 ## ----read in data - phospho, echo = FALSE--------------------------------
 annotationfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
                         "outlier-tool/data/brca/annotations_common_samples.csv")
 annotationtable = read.table(annotationfile, header = TRUE, row.names = 1, 
                 na.strings = c("", " ", "NA"), sep = ",", check.names = FALSE)
-comptable = annotationtable[,(ncol(annotationtable)-4):ncol(annotationtable)]
-colnames(comptable) = c("PIK3CA_helical_mutant", "PIK3CA_kinase_mutant", 
-                        "TP53_Nonsense", "TP53_Missense_all", 
-                        "TP53_Missense_DNABD")
+colnames(annotationtable) = gsub(" ", "_", colnames(annotationtable))
+compcols = annotationtable[,c("PAM50", "ER_Status", "PR_Status",
+                        "GATA3_Mutation", "PIK3CA_Mutation", "TP53_Mutation")]
 
 phosphocountfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
                     "outlier-tool/data/brca/phospho_common_samples_data.csv")
@@ -105,56 +131,68 @@ outfilepath = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/",
                      "output_VIGNETTE/")
 dir.create(outfilepath, recursive = TRUE, showWarnings = FALSE)
 
-comptable[1:5,1:5]
-dim(comptable)
-phosphotable[1:5,1:5]
+compcols[1:5,1:5]
+dim(compcols)
+rnatable[1:5,1:5]
 dim(rnatable)
 print("Testing for existance of outfilepath; <dir.exists(outfilepath)>")
 dir.exists(outfilepath)
 
+
+## ----format annotation data1 - phospho-----------------------------------
+## FORMAT our annotation table
+compcols[,4] = ifelse(is.na(compcols[,4]), "None", "Mutant")
+compcols[,5] = ifelse(is.na(compcols[,5]), "None", "Mutant")
+compcols[,6] = ifelse(is.na(compcols[,6]), "None", "Mutant")
+head(compcols)
+
+## ----format annotation data2 - phospho-----------------------------------
+## Use the make_comparison_columns function to create binary columns
+expanded_compcols = make_comparison_columns(compcols[,1,drop=FALSE])
+## Append new columns to the comparison annotation table
+comptable = cbind(expanded_compcols, compcols[2:ncol(compcols)])
+head(comptable)
 
 ## ----groupings - phospho-------------------------------------------------
 groupings = comparison_groupings(comptable)
 ## Print out the first 6 samples in each of our first 5 groupings
 lapply(groupings, head)[1:5]
 
-
 ## ----make outlier table - phospho----------------------------------------
 ## Perform the function
-reftable_function_out = make_outlier_table(phosphotable, 
-                            aggregate_features = TRUE, feature_delineator = "-")
+reftable_function_out = make_outlier_table(phosphotable)
 ## See the names of the outputted objects
 names(reftable_function_out)
 ## Assign them to individual variables
 outliertab = reftable_function_out$outliertab
 upperboundtab = reftable_function_out$upperboundtab
 sampmedtab = reftable_function_out$sampmedtab
-aggposoutlierstab = reftable_function_out$aggposoutlierstab
-aggposfractiontab = reftable_function_out$aggposfractiontab
 
 ## Note we will only use the outlier table - which looks like this now
 outliertab[1:5,1:5]
-aggposoutlierstab[1:5,1:5]
-aggposfractiontab[1:5,1:5]
-
 
 ## ----groupingtablist - phospho-------------------------------------------
-grouptablist = count_outliers(groupings, aggposoutlierstab)
-lapply(grouptablist, head)[1:5]
+count_outliers_out = count_outliers(groupings, outliertab, 
+                        aggregate_features = TRUE, feature_delineator = "-")
+grouptablist = count_outliers_out$grouptablist
+aggoutliertab = count_outliers_out$aggoutliertab
+aggfractiontab = count_outliers_out$aggfractiontab
+
+names(grouptablist)
+
+## ------------------------------------------------------------------------
+names(grouptablist[[1]])
+
+## ------------------------------------------------------------------------
+head(grouptablist[[1]][[1]])
+
+## ------------------------------------------------------------------------
+grouptablist[[1]][[2]]
 
 ## ----outlier analysis - phospho------------------------------------------
-outlier_analysis_out = outlier_analysis(grouptablist)
+outlier_analysis_out = outlier_analysis(grouptablist,
+                                        fraction_table = aggfractiontab,
+                                        fraction_samples_cutoff = 0.3)
 names(outlier_analysis_out)
-lapply(outlier_analysis_out, head)[1:5]
-
-## ----heatmap plotting - phospho------------------------------------------
-hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out, 
-                counttab = aggposfractiontab, metatable = annotationtable, 
-                fdrcutoffvalue = 0.1)
-hm1
-
-## To output heatmap to pdf outside of the function
-#pdf(paste0(outfilepath, "test_hm1.pdf"))
-#hm1
-#junk<-dev.off()
+lapply(outlier_analysis_out, head)[1]
 
