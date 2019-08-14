@@ -45,14 +45,14 @@ outliertab = reftable_function_out$outliertab
 data("sample_annotations")
 groupings = comparison_groupings(sample_annotations)
 
-grouptablist = count_outliers(groupings, outliertab)
+grouptablist = count_outliers(groupings, outliertab)$grouptablist
 
 outlier_analysis_out = outlier_analysis(grouptablist)
 
 metatable = sample_annotations
 counttab = sample_values
 
-outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
+hm1 = outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
     counttab, metatable, fdrcutoffvalue = 0.1)
 }
 \keyword{outliers}

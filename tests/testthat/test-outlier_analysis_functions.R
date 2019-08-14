@@ -28,33 +28,6 @@ test_that("making the outlier table works", {
 
     expect_true(!is.null(lowerboundtab))
 
-    reftable_function_out = make_outlier_table(sample_values,
-                                               analyze_negative_outliers = FALSE,
-                                               aggregate_features = TRUE)
-    outliertab = reftable_function_out$outliertab
-    upperboundtab = reftable_function_out$upperboundtab
-    sampmedtab = reftable_function_out$sampmedtab
-    aggposoutlierstab = reftable_function_out$aggposoutlierstab
-    aggposfractiontab = reftable_function_out$aggposfractiontab
-
-    expect_true(!is.null(aggposoutlierstab))
-    expect_true(!is.null(aggposfractiontab))
-
-    reftable_function_out = make_outlier_table(sample_values,
-                                               analyze_negative_outliers = TRUE,
-                                               aggregate_features = TRUE)
-    outliertab = reftable_function_out$outliertab
-    upperboundtab = reftable_function_out$upperboundtab
-    sampmedtab = reftable_function_out$sampmedtab
-    lowerboundtab = reftable_function_out$lowerboundtab
-    aggposoutlierstab = reftable_function_out$aggposoutlierstab
-    aggposfractiontab = reftable_function_out$aggposfractiontab
-    aggnegoutlierstab = reftable_function_out$aggnegoutlierstab
-    aggnegfractiontab = reftable_function_out$aggnegfractiontab
-
-    expect_true(!is.null(aggnegoutlierstab))
-    expect_true(!is.null(aggnegfractiontab))
-
 })
 
 test_that("counting outliers works", {
@@ -65,7 +38,8 @@ test_that("counting outliers works", {
     data("sample_annotations")
     groupings = comparison_groupings(sample_annotations)
 
-    grouptablist = count_outliers(groupings, outliertab)
+    count_outliers_out = count_outliers(groupings, outliertab)
+    grouptablist = count_outliers_out$grouptablist
 
     subcat = sort(as.vector(apply(sample_annotations, 2, function(x)
         na.omit(unique(x)))))
@@ -96,7 +70,7 @@ test_that("outlier analysis works", {
     data("sample_annotations")
     groupings = comparison_groupings(sample_annotations)
 
-    grouptablist = count_outliers(groupings, outliertab)
+    grouptablist = count_outliers(groupings, outliertab)$grouptablist
 
     outlier_analysis_out = outlier_analysis(grouptablist)
 

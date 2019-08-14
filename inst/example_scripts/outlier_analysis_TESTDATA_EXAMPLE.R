@@ -20,6 +20,7 @@ junk <- lapply(packagelist, function(xxx) suppressMessages(require(xxx, characte
 # namecheck = intersect(colnames(normcounttab), rownames(metatable))
 # metatable = metatable[namecheck,]
 # normcounttab = normcounttab[,namecheck]
+library(blackSheepR)
 
 data("sample_annotations")
 data("sample_values")
@@ -27,7 +28,7 @@ data("sample_values")
 comptable = metatable = sample_annotations
 normcounttab = sample_values
 
-outfilepath = "/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/output/"
+outfilepath = "/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/output/testdata_example/"
 dir.create(outfilepath, recursive = TRUE, showWarnings = FALSE)
 
 

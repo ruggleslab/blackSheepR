@@ -6,7 +6,7 @@
 \usage{
 blacksheep(counttable, metatable, analyze_negative_outliers = FALSE,
   aggregate_features = FALSE, feature_delineator = "\\\\.",
-  fdrcutoffvalue = 0.1, outfilepath = getwd())
+  fdrcutoffvalue = 0.1, write_out = FALSE, outfilepath = getwd())
 }
 \arguments{
 \item{counttable}{the count table to analyze}
@@ -32,6 +32,8 @@ Ex) Protein1.Phosphosite1 uses "\\." to aggregate on Protein1}
 
 \item{fdrcutoffvalue}{DEFAULT: 0.1; The FDR value for significance}
 
+\item{write_out}{DEFAULT: FALSE; write out tables and plots}
+
 \item{outfilepath}{the full string path to where the file should output to,
 DEFAULT is current working directory}
 }
@@ -48,7 +50,7 @@ data("sample_annotations")
 
 blacksheep(counttable = sample_values, metatable = sample_annotations,
     analyze_negative_outliers = TRUE, aggregate_features = TRUE,
-    feature_delineator = "\\\\.", fdrcutoffvalue = 0.1,
+    feature_delineator = "\\\\.", fdrcutoffvalue = 0.1, write_out = FALSE,
     outfilepath = getwd())
 }
 \keyword{outliers}

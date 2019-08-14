@@ -5,10 +5,11 @@
 \title{Separate out the "i"th gene, take the bounds, and then create a column
 that says whether or not this gene is high, low, or none in a sample with
 regards to the other samples in the dataset. Repeat this for every gene to
-create a reference table}
+create a reference table.
+If Aggregating - this will output the aggregate count and fraction table
+for your reference.}
 \usage{
-make_outlier_table(intable, analyze_negative_outliers = FALSE,
-  aggregate_features = FALSE, feature_delineator = "\\\\.")
+make_outlier_table(intable, analyze_negative_outliers = FALSE)
 }
 \arguments{
 \item{intable}{table with all of the inputted information, samples along the
@@ -18,17 +19,6 @@ x-axis, features along the y-axis}
 outliers in the negative direction as well. Will lead to the output of
 the outlier table containing "-1" values, in addition to negative outputs
 for boundaries and aggregate tables (if applicable)}
-
-\item{aggregate_features}{DEFAULT: FALSE; Toggle the Aggregate feature, which
-will aggregate features in your table based on the given delineator.
-Aggregation will output an aggregate table that counts the number of
-outliers per feature, and also a fraction table that show the number of
-outliers / number of candidates (which excludes missing values)}
-
-\item{feature_delineator}{DEFAULT: <"\\."> What character delineates the
-separation between primary and secondary features. NOTE: to use proper
-R syntax with escape characters if necessary
-Ex) Protein1.Phosphosite1 uses "\\." to aggregate on Protein1}
 }
 \value{
 a list with varied sections depending on parameters:
@@ -36,29 +26,22 @@ a list with varied sections depending on parameters:
     $upperboundtab - list of upper boundaries for outliers
     $lowerboundtab - list of lower boundaries of outliers
     $sampmedtab - list of median value per feature
-    $aggposoutlierstab - aggregate table for positive outliers
-    $aggnegoutlierstab - aggregate table for negative outliers
-    $aggposfractiontab - fraction table for number of pos outliers/candidates
-    $aggnegfractiontab - fraction table for number of neg outliers/candidates
 }
 \description{
 Separate out the "i"th gene, take the bounds, and then create a column
 that says whether or not this gene is high, low, or none in a sample with
 regards to the other samples in the dataset. Repeat this for every gene to
-create a reference table
+create a reference table.
+If Aggregating - this will output the aggregate count and fraction table
+for your reference.
 }
 \examples{
 data("sample_values")
 reftable_function_out = make_outlier_table(sample_values,
-    analyze_negative_outliers = TRUE, aggregate_features = TRUE,
-    feature_delineator = "\\\\.")
+    analyze_negative_outliers = TRUE)
 outliertab = reftable_function_out$outliertab
 upperboundtab = reftable_function_out$upperboundtab
 lowerboundtab = reftable_function_out$lowerboundtab
 sampmedtab = reftable_function_out$sampmedtab
-aggposoutlierstab = reftable_function_out$aggposoutlierstab
-aggnegoutlierstab = reftable_function_out$aggnegoutlierstab
-aggposfractiontab = reftable_function_out$aggposfractiontab
-aggnegfractiontab = reftable_function_out$aggnegfractiontab
 }
 \keyword{outliers}

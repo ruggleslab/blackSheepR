@@ -1,73 +1,48 @@
-# library(TCGAbiolinks)
-# 
-# GDCquery()
-# 
-# temp1 <- getGDCprojects()
-# temp2 <- TCGAbiolinks:::getProjectSummary("TCGA-BRCA")
-# 
-# query <- GDCquery(project = "TCGA-BRCA",
-#                   data.category = "Gene expression",
-#                   data.type = "Gene expression quantification",
-#                   platform = "Illumina HiSeq",
-#                   file.type  = "normalized_results",
-#                   experimental.strategy = "RNA-Seq",
-#                   legacy = TRUE)
-# 
-# GDCdownload(query)
+
+## Read in the data
+annotationfile = "/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/data/brca/annotations_common_samples.csv"
+annotationtable = read.table(annotationfile, header = TRUE, row.names = 1, na.strings = c("", " ", "NA"), sep = ",")
+comptable = annotationtable[,(ncol(annotationtable)-4):ncol(annotationtable)]
+
+rnacountfile = "/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/data/brca/rna_common_samples_data.csv"
+rnatable = read.table(rnacountfile, header = TRUE, row.names = 1, sep = ",", quote = "", check.names = FALSE)
+
+outfilepath = "/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/output_VIGNETTE/"
+dir.create(outfilepath, recursive = TRUE, showWarnings = FALSE)
+
+comptable[1:5,1:5]
+dim(comptable)
+rnatable[1:5,1:5]
+dim(rnatable)
+print("Testing for existance of outfilepath; <dir.exists(outfilepath)>")
+dir.exists(outfilepath)
 
 
-library(GenomicDataCommons)
-
-## Checks the status of GDC - needs to be OK
-#status()
-
-qfiles = files()
-files(filter( type == "gene_expression") )
-files() %>% filter( type == "gene_expression")
-qfiles = files() %>% filter( ~type == 'gene_expression')
-
-grep('pro',available_fields('files'),value=TRUE) %>% 
-    head()
-
-qfiles = files() %>%
-    filter( ~cases.project.project_id == 'TCGA-OV' & type == 'gene_expression')
+## Create groupings
+groupings = comparison_groupings(comptable)
+## Print out the first 6 samples in each of our first 5 groupings
+lapply(groupings, head)[1:5]
 
 
-files(filter( cases.project.project_id == 'TCGA-OV' & type == 'gene_expression'))
+## Make the outlier table
+reftable_function_out = make_outlier_table(rnatable)
+## See the names of the outputted objects
+names(reftable_function_out)
+## Assign them to individual variables
+outliertab = reftable_function_out$outliertab
+upperboundtab = reftable_function_out$upperboundtab
+sampmedtab = reftable_function_out$sampmedtab
+
+## Note we will only use the outlier table - which looks like this now
+outliertab[1:5,1:5]
 
 
-
-pquery = projects()
-str(pquery)
-presults = results_all(pquery)
-
-
-qcases = cases()
-qcases1 = cases(available_fields("cases"))
-qcases2 = cases() %>% GenomicDataCommons::select(available_fields('cases'))
+## Tabulate number of outliers
+grouptablist = count_outliers(groupings, outliertab)
+lapply(grouptablist, head)[1:5]
 
 
-qfiles = files()
-files(type=='gene_expression')
-qfiles = files() %>% filter( type == 'gene_expression')
-
-
-qfiles = files() %>%
-    filter( cases.project.project_id == 'TCGA-OV' & type == 'gene_expression')
-
-
-resp = cases() %>% filter(~ project.project_id=='TCGA-BRCA' &
-                              samples.sample_type=='Solid Tissue Normal') %>%
-    GenomicDataCommons::select(c(default_fields(cases()),'samples.sample_type')) %>%
-    response_all()
-count(resp)
-
-# the number of all the projects queried
-pcount = count(pquery)
-# JSON file that is presented as a nested list that has all the info on our query
-presults = results(pquery)
-
-
-default_fields('files')
-default_fields(pquery)
-
+## Perfrom the outlier abalysis
+outlier_analysis_out = outlier_analysis(grouptablist)
+names(outlier_analysis_out)
+lapply(outlier_analysis_out, head)[1:5]

@@ -77,7 +77,7 @@ create_heatmap <- function(counttab = counttab,
         temp1 <- vector("list", length(colannotationlist))
         names(temp1) = names(colannotationlist)
         annotlegendlist = lapply(temp1, function(x) x[[1]] = list(title_gp =
-            gpar(fontsize = 5, fontface = "bold"), labels_gp=gpar(fontsize=4)))
+            gpar(fontsize = 6, fontface = "bold"), labels_gp=gpar(fontsize=6)))
         ## Param that  keeps a legend if it's annotation is continuous
         ## or has less than 10 discrete terms, otherwise hide the legend
         showlegendparam = unname(unlist(lapply(colannotationlist, function(x) {
@@ -155,30 +155,36 @@ create_heatmap <- function(counttab = counttab,
     }
     heatmapcolorparam = colorRamp2(
         c(lowvalue, midvalue, highvalue), c(lowcolor, midcolor, highcolor))
+    #heightparam = ifelse(nrow(rnatable) < 20,unit(1,"cm"),NULL)
 
     ht1 = Heatmap(maptab,
             col = heatmapcolorparam,    ## Define the color scale
             row_title = "Features",                     ## Name the rows
+            row_title_gp = gpar(fontsize = 8),
             column_title = nameparam,                   ## Name the columns
+            column_title_gp = gpar(fontsize = 8),
 
             cluster_columns = colclusterparam,          ## Cluster the columns
             cluster_rows = rowclusterparam,             ## Cluster the rows
 
             show_column_names = ncol(maptab) <=50,      ## Show the Column Names
             column_names_gp = gpar(fontsize = 6),       ## Column Name Size
-            show_row_names = nrow(maptab) <=200,        ## Show Row names
+            show_row_names = nrow(maptab) <=100,        ## Show Row names
             row_names_side = "left",                    ## Place the row names
             row_names_gp = gpar(fontsize=6),
 
-            show_row_dend = nrow(maptab) <=200,         ## Show row dendrogram
+            show_row_dend = nrow(maptab) <=100,         ## Show row dendrogram
             show_column_dend = TRUE,                    ## Show col dendrogram
 
             heatmap_legend_param = list(title = "Value",
                 #legend_height = unit(2, "cm"),
                 title_gp = gpar(fontsize = 8, fontface = "bold")),
             top_annotation = hatop,
-            height = unit(min(nrow(maptab), 20),"cm"),
-            width = unit(min(ncol(maptab), 12),"cm")
+            height = unit(min((nrow(maptab)/2), 10),"cm")
+            #height = unit(min(nrow(maptab), 20),"cm"),
+            #height = heightparam,
+            #height = unit(min(20/nrow(maptab), 1),"cm"),
+            #width = unit(min(ncol(maptab), 12),"cm")
     )
 
     ## Plot out the heatmap

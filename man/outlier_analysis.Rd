@@ -6,7 +6,8 @@
     fisher exact test to get the p.value for the difference in outlier count
     for each feature in each of your comparisons}
 \usage{
-outlier_analysis(grouptablist, write_out_tables = FALSE,
+outlier_analysis(grouptablist, fraction_table = NULL,
+  fraction_samples_cutoff = 0.3, write_out_tables = FALSE,
   outfilepath = getwd())
 }
 \arguments{
@@ -15,6 +16,14 @@ the inputted grouptablist will be deciphered to determine its content.
 This means that user decides to input the outliertab or aggregate tab,
 and the output will analyze according to what positive and negative
 information is contained within the table}
+
+\item{fraction_table}{DEFAULT: NULL; Input a fraction table to filter to
+only include features that have x% of samples in the ingroup that have
+an outlier.}
+
+\item{fraction_samples_cutoff}{DEFAULT: 0.3; Input a fractional cut off for
+the of samples that need to have an outlier for feature to be
+considered}
 
 \item{write_out_tables}{DEFAULT: FALSE; utility in function to write out
 each of the analyses to a separate table to whereever <outfilepath> is
