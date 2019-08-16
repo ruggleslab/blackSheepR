@@ -173,8 +173,8 @@ The blacksheep function has a number of steps to it that are individually
 described below. Note though that the individual steps only need to be used for 
 specific query or alteration. In the general case, the `blacksheep` function on 
 its own should be sufficient for the desired analysis.
-```{r blacksheep, fig.keep="none"}
-blacksheep_out = blacksheep(se = blacksheep_SE, 
+```{r deva, fig.keep="none"}
+blacksheep_out = deva(se = blacksheep_SE, 
     analyze_negative_outliers = FALSE, aggregate_features = TRUE, 
     feature_delineator = "-", fdrcutoffvalue = 0.1, write_out = FALSE)
 ```

@@ -663,11 +663,11 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 #' se = SummarizedExperiment(assays = list(counts = as.matrix(sample_values)),
 #'     colData = DataFrame(sample_annotations))
 #'
-#' blacksheep(se = se,
+#' deva(se = se,
 #'     analyze_negative_outliers = TRUE, aggregate_features = TRUE,
 #'     feature_delineator = "\\.", fdrcutoffvalue = 0.1, write_out = FALSE,
 #'     outfilepath = getwd())
-blacksheep <- function(se, analyze_negative_outliers = FALSE,
+deva <- function(se, analyze_negative_outliers = FALSE,
                         aggregate_features = FALSE, feature_delineator = "\\.",
                         fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.1,
                         write_out = FALSE, outfilepath = getwd()) {

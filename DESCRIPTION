@@ -2,9 +2,15 @@ Package: blackSheepR
 Type: Package
 Title: Outlier Analysis for pairwise differential comparison
 Version: 0.99.0
-Author: MacIntosh Cornwell <macintosh.cornwell@nyulangone.org>
-Maintainer: MacIntosh Cornwell <macintosh.cornwell@nyulangone.org>
-Description: BlackSheep is a tool designed for outlier analysis in the context of pairwise comparisons in an effort to find distinguishing characteristics from two groups. This tool was designed to be applied for biological applications such as phosphoproteomics or transcriptomics, but it can be used for any data that can be represented by a 2D table, and has two sub populations within the table to compare.
+Authors@R: c(person("MacIntosh", "Cornwell", 
+    email="macintosh.cornwell@nyulangone.org", 	role = c("aut")), 
+	person("RugglesLab", email = "ruggleslab@gmail.com", role = "cre"))
+Description: BlackSheep is a tool designed for outlier analysis in the context 
+    of pairwise comparisons in an effort to find distinguishing characteristics 
+    from two groups. This tool was designed to be applied for biological 
+    applications such as phosphoproteomics or transcriptomics, but it can be 
+    used for any data that can be represented by a 2D table, and has two sub 
+    populations within the table to compare.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -28,4 +34,6 @@ Suggests:
     curl
 Depends:
     R (>= 3.5)
-biocViews: Sequencing, RNASeq, GeneExpression, Transcription, DifferentialExpression, Transcriptomics
+biocViews: Sequencing, RNASeq, GeneExpression, Transcription, 
+    DifferentialExpression, Transcriptomics
+BugReports: https://github.com/ruggleslab/blackSheepR/issues
