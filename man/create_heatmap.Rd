@@ -4,24 +4,17 @@
 \alias{create_heatmap}
 \title{Plot out a heatmap}
 \usage{
-create_heatmap(counttab = counttab, subsetnum = FALSE,
-  colmetatable = NULL, colannotationlist = NULL, rowmetatable = NULL,
-  rowannotationlist = NULL, colclusterparam = FALSE,
+create_heatmap(counttab = counttab, colmetatable = NULL,
+  colannotationlist = NULL, colclusterparam = FALSE,
   rowclusterparam = FALSE, nameparam, write_out_plot = FALSE,
   pdfoutfile = pdfoutfile)
 }
 \arguments{
 \item{counttab}{table with counts, samples -x-axis, features -y-axis}
 
-\item{subsetnum}{DEFAULT: FALSE, plot the top N number of varied genes}
-
 \item{colmetatable}{the metatable containing information for the columns}
 
 \item{colannotationlist}{annotation table for columns, based off colmetatable}
-
-\item{rowmetatable}{the metatable containing information for the rows}
-
-\item{rowannotationlist}{annotation table for rows, based off of rowmetatable}
 
 \item{colclusterparam}{cluster the columns?}
 
@@ -46,9 +39,8 @@ pdfoutfile = paste(getwd(), "/heatmap_out.pdf", sep = "")
 nameparam = "testplot"
 
 create_heatmap(counttab = counttab,
-    subsetnum = FALSE, colmetatable = NULL,
-    colannotationlist = NULL, rowmetatable = NULL,
-    rowannotationlist = NULL, colclusterparam = FALSE,
+    colmetatable = NULL,
+    colannotationlist = NULL,colclusterparam = FALSE,
     rowclusterparam = FALSE, nameparam, write_out_plot = FALSE,
     pdfoutfile= pdfoutfile)
 }

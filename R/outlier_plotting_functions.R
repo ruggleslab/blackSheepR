@@ -7,11 +7,8 @@
 ## WRITE HEATMAP FUNCTION
 #' Plot out a heatmap
 #' @param counttab table with counts, samples -x-axis, features -y-axis
-#' @param subsetnum DEFAULT: FALSE, plot the top N number of varied genes
 #' @param colmetatable the metatable containing information for the columns
 #' @param colannotationlist annotation table for columns, based off colmetatable
-#' @param rowmetatable the metatable containing information for the rows
-#' @param rowannotationlist annotation table for rows, based off of rowmetatable
 #' @param colclusterparam cluster the columns?
 #' @param rowclusterparam cluster the rows?
 #' @param nameparam the title on the heatmap
@@ -28,23 +25,14 @@
 #' nameparam = "testplot"
 #'
 #' create_heatmap(counttab = counttab,
-#'     subsetnum = FALSE, colmetatable = NULL,
-#'     colannotationlist = NULL, rowmetatable = NULL,
-#'     rowannotationlist = NULL, colclusterparam = FALSE,
+#'     colmetatable = NULL,
+#'     colannotationlist = NULL,colclusterparam = FALSE,
 #'     rowclusterparam = FALSE, nameparam, write_out_plot = FALSE,
 #'     pdfoutfile= pdfoutfile)
 create_heatmap <- function(counttab = counttab,
-    subsetnum = FALSE, colmetatable = NULL,
-    colannotationlist = NULL, rowmetatable = NULL,
-    rowannotationlist = NULL, colclusterparam = FALSE,
+    colmetatable = NULL, colannotationlist = NULL, colclusterparam = FALSE,
     rowclusterparam = FALSE, nameparam, write_out_plot = FALSE,
     pdfoutfile = pdfoutfile) {
-
-    ## Filter to the N most varied genes if applicable
-    if (subsetnum !=FALSE) {
-        counttab_variance = sort(apply(counttab,1,var), decreasing=TRUE)
-        counttab = counttab[names(counttab_variance[seq_len(subsetnum)]),]
-    }
 
     ## Calc. spearman correlation and use values for column clustering
     if (colclusterparam != FALSE) {
@@ -90,44 +78,7 @@ create_heatmap <- function(counttab = counttab,
             show_annotation_name = TRUE,
             annotation_name_gp = gpar(fontsize = 8, fontface="bold"),
             annotation_name_side = "left",
-            simple_anno_size = unit(min(60/length(colannotationlist), 5),"mm"),
-            show_legend = showlegendparam,
-            annotation_legend_param = annotlegendlist)
-    }
-
-    ## Define the side annotation if data is supplied
-    if (!is.null(rowannotationlist) & !is.null(rowmetatable)) {
-
-        ## Define parameters for each of the labels on the annotation bars
-        temp1 <- vector("list", length(rowannotationlist))
-        names(temp1) = names(rowannotationlist)
-        annotlegendlist = lapply(temp1, function(x) x[[1]] = list(title_gp =
-                gpar(fontsize=8, fontface="bold"), labels_gp=gpar(fontsize=8)))
-
-        showlegendparam = unname(unlist(lapply(rowannotationlist, function(x) {
-            numterms = tryCatch(length(na.omit(unique(x))),
-                                error=function(e) NULL)
-            is.null(numterms) || numterms <= 10})))
-
-        ## Look for empty annotations - fill with white and hide their legend
-        emptyannots = names(vapply(rowannotationlist, length)[vapply(
-            rowannotationlist, length)==0])
-        if (length(emptyannots) > 0){
-            for (i in seq_len(length(emptyannots))) {
-                temp1 = "white"
-                names(temp1) = emptyannots[i]
-                rowannotationlist[[emptyannots[i]]] = temp1
-            }
-        showlegendparam[
-            which(names(rowannotationlist) %in% emptyannots)] = FALSE
-        }
-        haside = rowAnnotation(df = rowmetatable,
-            col = rowannotationlist,
-            na_col = "white",
-            gp = gpar(fontsize = 0.5),
-            show_annotation_name=TRUE,
-            annotation_name_gp = gpar(fontsize = 8, fontface="bold"),
-            annotation_name_side = "top",
+            simple_anno_size = unit(min(30/length(colannotationlist), 5),"mm"),
             show_legend = showlegendparam,
             annotation_legend_param = annotlegendlist)
     }
@@ -180,21 +131,14 @@ create_heatmap <- function(counttab = counttab,
                 #legend_height = unit(2, "cm"),
                 title_gp = gpar(fontsize = 8, fontface = "bold")),
             top_annotation = hatop,
-            height = unit(min((nrow(maptab)/2), 10),"cm")
-            #height = unit(min(nrow(maptab), 20),"cm"),
-            #height = heightparam,
-            #height = unit(min(20/nrow(maptab), 1),"cm"),
-            #width = unit(min(ncol(maptab), 12),"cm")
+            height = unit(min((nrow(maptab)/2), 6),"cm"),
+            width = unit(min(ncol(maptab), 9),"cm")
     )
 
     ## Plot out the heatmap
     if (write_out_plot == TRUE) {pdf(file = pdfoutfile, width=11,height=8.5)}
-    if (!is.null(rowannotationlist) & !is.null(rowmetatable)) {
-        outplot = draw(ht1 + haside, annotation_legend_side = "bottom",
-                        padding = unit(c(5, 20, 5, 5), "mm"))
-    } else {
-            outplot = draw(ht1, annotation_legend_side = "bottom",
-                            padding = unit(c(5, 20, 5, 5), "mm"))}
+    outplot = draw(ht1, annotation_legend_side = "bottom",
+                    padding = unit(c(5, 20, 5, 5), "mm"))
     if (write_out_plot == TRUE) {junk <- dev.off()}
     return(outplot)
 

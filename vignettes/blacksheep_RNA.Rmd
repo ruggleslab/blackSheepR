@@ -167,7 +167,7 @@ The blacksheep function has a number of steps to it that are individually
 described below. Note though that the individual steps only need to be used for 
 specific query or alteration. In the general case, the `blacksheep` function on 
 its own should be sufficient for the desired analysis.
-```{r deva, fig.keep="none", fig.small=TRUE}
+```{r deva, fig.keep="none"}
 blacksheep_out = deva(blacksheep_SE,
     analyze_negative_outliers = FALSE, aggregate_features = FALSE,
     fdrcutoffvalue = 0.1, write_out = FALSE)
@@ -319,9 +319,14 @@ The outlier_analysis object is used to select the differential genes.
 NOTE that you can write out the plot directly in the function using the given 
 parameter `write_out_plot` or the saved object from the function is a heatmap, 
 so you can open your own pdf and print out using the commented out code below.
-```{r heatmap plotting - rna, fig.keep="none"}
+NOTE that the metatable must be in the ORDER desired, and that this function 
+will NOT order it for you.
+```{r heatmap plotting - rna, fig.keep="none", }
+## This will sort every column in <comptable> sequentially before running
+plottable = comptable[do.call(order, c(decreasing = TRUE, 
+                            data.frame(comptable[,1:ncol(comptable)]))),]
 hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out, 
-                      counttab = rnatable, metatable = comptable, 
+                      counttab = rnatable, metatable = plottable, 
                       fdrcutoffvalue = 0.1)
 
 ## To output heatmap to pdf outside of the function
@@ -329,8 +334,8 @@ hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out,
 #hm1
 #junk<-dev.off()
 ```
-```{r heatmap plotting 1example - rna, fig.cap = "Example outputted Heatmap"}
-hm1[[2]]
+```{r heatmap plotting example - rna, fig.cap = "Example outputted Heatmap"}
+hm1[[4]]
 ```
 
 

@@ -142,11 +142,6 @@ subfeatures - phosphorylation sites. This aspect of the data will directly
 relate to later analysis, as blacksheep will AGGREGATE on this data and 
 collapse the data onto the primary feature. More on this later.
 ```{r}
-phosphocountfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
-                    "outlier-tool/data/brca/phospho_common_samples_data.csv")
-phosphotable = read.table(phosphocountfile, header = TRUE, row.names = 1, 
-                        sep = ",", quote = "", check.names = FALSE)
-
 phosphotable = read.table(curl(paste0("https://raw.githubusercontent.com/",
                     "ruggleslab/blacksheep_supp/dev/vignettes/brca/",
                     "phospho_common_samples_data.csv")), header = TRUE,
@@ -361,7 +356,11 @@ The outlier_analysis object is used to select the differential genes.
 NOTE that you can write out the plot directly in the function using the given 
 parameter `write_out_plot` or the saved object from the function is a heatmap, 
 so you can open your own pdf and print out using the commented out code below.
+NOTE that the metatable must be in the ORDER desired, and that this function 
+will NOT order it for you.
 ```{r heatmap plotting - phospho, fig.keep="none"}
+plottable = comptable[do.call(order, c(decreasing = TRUE, 
+                            data.frame(comptable[,1:ncol(comptable)]))),]
 hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out, 
                 counttab = aggfractiontab, metatable = comptable, 
                 fdrcutoffvalue = 0.1)
@@ -372,8 +371,8 @@ hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out,
 #junk<-dev.off()
 ```
 
-```{r heatmap plotting 1example - phospho}
-hm1[[1]]
+```{r heatmap plotting example - phospho, fig.cap = "Example outputted Heatmap"}
+hm1[[2]]
 ```
 
 

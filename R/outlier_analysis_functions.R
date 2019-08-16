@@ -593,7 +593,6 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
         GOI = intable[rowSums(fdrcols < fdrcutoffvalue) >= 1,1]
 
         if (length(GOI) > 0) {
-            #print("GOI")
             ## Take the metatable, order it by 1s and then 2s on whatever
             ## comparison we are doing, take comparison columns for plotting
             ## Added in as.character as a failsafe
@@ -604,10 +603,9 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
             outfile1 = paste(outfilepath, "outlieranalysis_heatmap_for_",
                 names(outlier_analysis_out)[analysiscount], ".pdf", sep="")
             hm1 = create_heatmap(counttab = subsetcounttab,
-                subsetnum = FALSE, colmetatable = metatable,
-                colannotationlist = annotation1, rowmetatable = NULL,
-                rowannotationlist = NULL, colclusterparam = FALSE,
-                rowclusterparam = FALSE, write_out_plot = write_out_plot,
+                colmetatable = metatable, colannotationlist = annotation1,
+                colclusterparam = FALSE, rowclusterparam = FALSE,
+                write_out_plot = write_out_plot,
                 nameparam = names(outlier_analysis_out)[analysiscount],
                 pdfoutfile = outfile1)
             #return(hm1)
