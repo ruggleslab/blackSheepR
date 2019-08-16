@@ -147,6 +147,11 @@ phosphocountfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
 phosphotable = read.table(phosphocountfile, header = TRUE, row.names = 1, 
                         sep = ",", quote = "", check.names = FALSE)
 
+phosphotable = read.table(curl(paste0("https://raw.githubusercontent.com/",
+                    "ruggleslab/blacksheep_supp/dev/vignettes/brca/",
+                    "phospho_common_samples_data.csv")), header = TRUE,
+                    row.names = 1, sep = ",", quote = "", check.names = FALSE)
+
 phosphotable[1:5,1:5]
 dim(phosphotable)
 ```
