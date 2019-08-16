@@ -18,10 +18,14 @@ Imports:
     circlize,
     viridis,
     RColorBrewer,
-    ComplexHeatmap
+    ComplexHeatmap,
+    SummarizedExperiment
 Suggests: 
     testthat (>= 2.1.0),
-    knitr
+    knitr,
+    BiocStyle,
+    rmarkdown,
+    curl
 Depends:
     R (>= 3.5)
 biocViews: Sequencing, RNASeq, GeneExpression, Transcription, DifferentialExpression, Transcriptomics

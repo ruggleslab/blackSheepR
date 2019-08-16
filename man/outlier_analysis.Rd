@@ -23,7 +23,8 @@ an outlier.}
 
 \item{fraction_samples_cutoff}{DEFAULT: 0.3; Input a fractional cut off for
 the of samples that need to have an outlier for feature to be
-considered}
+considered. ex) 10 samples in ingroup - 3 need to have an outlier for
+feature to be considered significant}
 
 \item{write_out_tables}{DEFAULT: FALSE; utility in function to write out
 each of the analyses to a separate table to whereever <outfilepath> is

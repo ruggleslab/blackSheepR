@@ -79,22 +79,27 @@ test_that("outlier analysis works", {
 })
 
 
-# test_that("plotting the heatmap works", {
-#     data("sample_values")
-#     reftable_function_out = make_outlier_table(sample_values)
-#     outliertab = reftable_function_out$outliertab
-#
-#     data("sample_annotations")
-#     groupings = comparison_groupings(sample_annotations)
-#
-#     grouptablist = count_outliers(groupings, outliertab)
-#
-#     outlier_analysis_out = outlier_analysis(grouptablist)
-#
-#     outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
-#                     sample_values, sample_annotations, fdrcutoffvalue = 0.1,
-#                     outfilepath = getwd())
-#
-#
-#
-# })
+test_that("plotting the heatmap works", {
+    data("sample_values")
+    reftable_function_out = make_outlier_table(sample_values)
+    outliertab = reftable_function_out$outliertab
+
+    data("sample_annotations")
+    groupings = comparison_groupings(sample_annotations)
+
+    grouptablist = count_outliers(groupings, outliertab)$grouptablist
+
+    outlier_analysis_out = outlier_analysis(grouptablist)
+
+    hm1 = outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
+                    sample_values, sample_annotations, fdrcutoffvalue = 0.1,
+                    outfilepath = getwd())
+
+    ## Test to see if the number of analyses that have significant genes also
+    ## have heatmaps
+    expect_equal(length(hm1), sum(unlist(lapply(
+        outlier_analysis_out, function(x)
+            length(x[rowSums(
+                x[ ,grepl("fdr", colnames(x))] < 0.1) >= 1,1]))>0)))
+
+})

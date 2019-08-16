@@ -4,6 +4,7 @@
 ################################
 ## Blacksheep Script File
 
+
 ## MAKE COMPARISON COLUMNS
 #' Utility function that will take in columns with several subcategories,
 #' and output several columns each with binary classifications.
@@ -72,9 +73,11 @@ comparison_groupings <- function(comptable) {
     groupings = list()
 
     ## FAILSAFE - to insure that these are charactors not factors
-    featurenames = rownames(comptable)
-    comptable = apply(comptable,2,as.character)
-    rownames(comptable) = featurenames
+    comptable = data.frame(comptable)
+    samplenames = rownames(comptable)
+    comptable = data.frame(lapply(comptable,as.character),
+                                stringsAsFactors = FALSE)
+    rownames(comptable) = samplenames
     for (i in seq_len(ncol(comptable))) {
         # Select column and create comparison based off entries in column
         subsamp = comptable[,i, drop=FALSE]
@@ -337,7 +340,8 @@ count_outliers <- function(groupings, outliertab,
 #'     an outlier.
 #' @param fraction_samples_cutoff DEFAULT: 0.3; Input a fractional cut off for
 #'     the of samples that need to have an outlier for feature to be
-#'     considered
+#'     considered. ex) 10 samples in ingroup - 3 need to have an outlier for
+#'     feature to be considered significant
 #' @param write_out_tables DEFAULT: FALSE; utility in function to write out
 #'     each of the analyses to a separate table to whereever <outfilepath> is
 #'     specfied.
@@ -471,7 +475,7 @@ outlier_analysis <- function(grouptablist,
             fraction_selected_genes = union(rownames(group1fractab_select2),
                                             rownames(group2fractab_select2))
             fishout = fishout[rownames(fishout) %in% fraction_selected_genes,,
-                              drop=FALSE]
+                            drop=FALSE]
 
         } else {fraction_selected_genes = rownames(fishout)}
 
@@ -480,7 +484,7 @@ outlier_analysis <- function(grouptablist,
             fdrvals = apply(fishout, 2, function(x) p.adjust(x, method = "BH"))
         } else {
             fdrvals = data.frame(as.list(p.adjust(fishout, method = "BH")),
-                                 row.names = rownames(fishout))
+                                row.names = rownames(fishout))
             colnames(fdrvals) = colnames(fishout)
         }
         colnames(fdrvals) = gsub(pattern = "pval", replacement = "fdr",
@@ -622,9 +626,8 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 
 ## COMPLETE BLACKSHEEP FUNCTION
 #' Run the entire Blacksheep Function from Start to finish
-#' @param counttable the count table to analyze
-#' @param metatable the metatable with each column representing a comparison to
-#'     perform.
+#' @param se The SummarizedExperiment object containing the countdata and the
+#'     associated annotation data with comparisons in the colData object.
 #' @param analyze_negative_outliers DEFAULT: FALSE; Toggle the analysis of
 #'     outliers in the negative direction as well. Will lead to the output of
 #'     the outlier table containing "-1" values, in addition to negative outputs
@@ -638,6 +641,10 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 #'     separation between primary and secondary features. NOTE: to use proper
 #'     R syntax with escape characters if necessary
 #'     Ex) Protein1.Phosphosite1 uses "\\." to aggregate on Protein1
+#' @param fraction_samples_cutoff DEFAULT: 0.3; Input a fractional cut off for
+#'     the of samples that need to have an outlier for feature to be
+#'     considered. ex) 10 samples in ingroup - 3 need to have an outlier for
+#'     feature to be considered significant
 #' @param fdrcutoffvalue DEFAULT: 0.1; The FDR value for significance
 #' @param write_out DEFAULT: FALSE; write out tables and plots
 #' @param outfilepath the full string path to where the file should output to,
@@ -645,20 +652,29 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 #' @return outputs a pdf with the heatmap in the current working directory
 #' @keywords outliers
 #' @import ComplexHeatmap RColorBrewer circlize
+#' @rawNamespace import(SummarizedExperiment, except = c(start, end))
 #' @export
 #' @examples
 #'
+#' library(SummarizedExperiment)
 #' data("sample_values")
 #' data("sample_annotations")
 #'
-#' blacksheep(counttable = sample_values, metatable = sample_annotations,
+#' se = SummarizedExperiment(assays = list(counts = as.matrix(sample_values)),
+#'     colData = DataFrame(sample_annotations))
+#'
+#' blacksheep(se = se,
 #'     analyze_negative_outliers = TRUE, aggregate_features = TRUE,
 #'     feature_delineator = "\\.", fdrcutoffvalue = 0.1, write_out = FALSE,
 #'     outfilepath = getwd())
-blacksheep <- function(counttable, metatable, analyze_negative_outliers = FALSE,
+blacksheep <- function(se, analyze_negative_outliers = FALSE,
                         aggregate_features = FALSE, feature_delineator = "\\.",
-                        fdrcutoffvalue = 0.1, write_out = FALSE,
-                        outfilepath = getwd()) {
+                        fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.1,
+                        write_out = FALSE, outfilepath = getwd()) {
+
+    ## Extracting information from the SummarizedExperiment
+    counttable = assays(se)[[1]]
+    metatable = colData(se)
 
     ## Use the groupings function to create comparison groups
     groupings = comparison_groupings(metatable)
@@ -683,7 +699,7 @@ blacksheep <- function(counttable, metatable, analyze_negative_outliers = FALSE,
 
         hm1 = outlier_heatmap(outlier_analysis_out = pos_outlier_analysis_out,
                         analysis_num = NULL, counttab = counttable,
-                        metatable = metatable, fdrcutoffvalue = 0.1,
+                        metatable = metatable, fdrcutoffvalue = fdrcutoffvalue,
                         write_out_plot = write_out)
 
         ## Negative/nonaggregated workflow
@@ -696,14 +712,14 @@ blacksheep <- function(counttable, metatable, analyze_negative_outliers = FALSE,
             neg_outlier_analysis_out = outlier_analysis(
                 grouptablist = neggrouptablist,
                 fraction_table = negaggfractiontab,
-                fraction_samples_cutoff = 0.3,
+                fraction_samples_cutoff = fraction_samples_cutoff,
                 write_out_tables = write_out)
 
             hm2 = outlier_heatmap(outlier_analysis_out =
-                            neg_outlier_analysis_out,
-                            analysis_num = NULL, counttab = negaggfractiontab,
-                            metatable = metatable, fdrcutoffvalue = 0.1,
-                            write_out_plot = write_out)
+                        neg_outlier_analysis_out,
+                        analysis_num = NULL, counttab = negaggfractiontab,
+                        metatable = metatable, fdrcutoffvalue = fdrcutoffvalue,
+                        write_out_plot = write_out)
         }
 
         ## Return the output - parameterized to output pos/neg as appropriate
@@ -721,36 +737,39 @@ blacksheep <- function(counttable, metatable, analyze_negative_outliers = FALSE,
         ## With feature aggregation - we do positive and negative separtely
         outlier_analysis_out = NULL
         pos_count_outliers_out = count_outliers(groupings, outliertab,
-                                                aggregate_features = TRUE)
+            aggregate_features = TRUE, feature_delineator = feature_delineator)
         posgrouptablist = pos_count_outliers_out$grouptablist
         posaggfractiontab = pos_count_outliers_out$aggfractiontab
 
         pos_outlier_analysis_out = outlier_analysis(posgrouptablist,
                         fraction_table = posaggfractiontab,
+                        fraction_samples_cutoff = fraction_samples_cutoff,
                         write_out_tables = write_out)
 
         hm1 = outlier_heatmap(outlier_analysis_out = pos_outlier_analysis_out,
                         analysis_num = NULL, counttab = posaggfractiontab,
-                        metatable = metatable, fdrcutoffvalue = 0.1,
+                        metatable = metatable, fdrcutoffvalue = fdrcutoffvalue,
                         write_out_plot = write_out)
 
         if (analyze_negative_outliers == TRUE) {
             neg_count_outliers_out = count_outliers(groupings, outliertab,
-                aggregate_features = TRUE, analyze_negative_outliers = TRUE)
+                aggregate_features = TRUE,
+                feature_delineator = feature_delineator,
+                analyze_negative_outliers = TRUE)
             neggrouptablist = neg_count_outliers_out$grouptablist
             negaggfractiontab = neg_count_outliers_out$aggfractiontab
 
             neg_outlier_analysis_out = outlier_analysis(
                 grouptablist = neggrouptablist,
                 fraction_table = negaggfractiontab,
-                fraction_samples_cutoff = 0.3,
+                fraction_samples_cutoff = fraction_samples_cutoff,
                 write_out_tables = write_out)
 
             hm2 = outlier_heatmap(outlier_analysis_out =
-                            neg_outlier_analysis_out,
-                            analysis_num = NULL, counttab = negaggfractiontab,
-                            metatable = metatable, fdrcutoffvalue = 0.1,
-                            write_out_plot = write_out)
+                        neg_outlier_analysis_out,
+                        analysis_num = NULL, counttab = negaggfractiontab,
+                        metatable = metatable, fdrcutoffvalue = fdrcutoffvalue,
+                        write_out_plot = write_out)
         }
 
         if (analyze_negative_outliers != TRUE) {

@@ -7,22 +7,39 @@
 
 library(blackSheepR)
 
+library(curl)
+annotationtable = read.table(curl(paste0("https://raw.githubusercontent.com/",
+                    "ruggleslab/blacksheep_supp/dev/vignettes/brca/",
+                    "annotations_common_samples.csv")), header = TRUE,
+                    row.names = 1, na.strings = c("", " ", "NA"), sep = ",",
+                    check.names = FALSE, stringsAsFactors = FALSE)
+colnames(annotationtable) = gsub(" ", "_", colnames(annotationtable))
+compcols = annotationtable[,c("PAM50", "ER_Status", "PR_Status",
+                        "GATA3_Mutation", "PIK3CA_Mutation", "TP53_Mutation")]
 
-# Example Workflow - RNA
+rnatable = read.table(curl(paste0("https://raw.githubusercontent.com/",
+                    "ruggleslab/blacksheep_supp/dev/vignettes/brca/",
+                    "rna_common_samples_data.csv")), header = TRUE,
+                    row.names = 1, sep = ",", quote = "", check.names = FALSE)
+detach("package:curl", unload=TRUE)
+
+
+# Example Workflow
+w - RNA
 # In the following section - we will go through an example of using outlier
 # analysis using RNA data. The inputted data is being supplied from
 # [Github](https://github.com/ruggleslab/blacksheep_supp/tree/master) and is
 # from breast cancer data from TCGA and CPTAC.
 
 ## Read in Annotation Data
-annotationfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
-                "outlier-tool/data/brca/annotations_common_samples.csv")
-annotationtable = read.table(annotationfile, header = TRUE, row.names = 1,
-                na.strings = c("", " ", "NA"), sep = ",", check.names = FALSE,
-                stringsAsFactors = FALSE)
-colnames(annotationtable) = gsub(" ", "_", colnames(annotationtable))
-compcols = annotationtable[,c("PAM50", "ER_Status", "PR_Status",
-                        "GATA3_Mutation", "PIK3CA_Mutation", "TP53_Mutation")]
+# annotationfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
+#                 "outlier-tool/data/brca/annotations_common_samples.csv")
+# annotationtable = read.table(annotationfile, header = TRUE, row.names = 1,
+#                 na.strings = c("", " ", "NA"), sep = ",", check.names = FALSE,
+#                 stringsAsFactors = FALSE)
+# colnames(annotationtable) = gsub(" ", "_", colnames(annotationtable))
+# compcols = annotationtable[,c("PAM50", "ER_Status", "PR_Status",
+#                         "GATA3_Mutation", "PIK3CA_Mutation", "TP53_Mutation")]
 
 ## FORMAT our annotation table
 compcols[,4] = ifelse(is.na(compcols[,4]), "None", "Mutant")
@@ -66,7 +83,7 @@ sampmedtab = reftable_function_out$sampmedtab
 outliertab[1:5,1:5]
 
 #### Tabulate Outliers
-grouptablist = count_outliers(groupings, outliertab)
+grouptablist = count_outliers(groupings, outliertab)$grouptablist
 lapply(grouptablist, head)[1:5]
 
 #### Run Outlier Analysis
@@ -83,10 +100,7 @@ for (analysisnum in seq_len(length(outlier_analysis_out))) {
 }
 
 #### Plot Results using Heatmap Generating Function
-hm_annotations = annotationtable[,c("PAM50", "ER Status", "PR Status",
-        "HER2 Status", "GATA3 Mutation", "PIK3CA Mutation", "TP53 Mutation")]
-hm_annotations = hm_annotations[order(hm_annotations[,1], hm_annotations[,2],
-                    hm_annotations[,3] ,hm_annotations[,4], na.last = TRUE),]
+hm_annotations = comptable
 
 hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out,
         counttab = rnatable, metatable = hm_annotations, fdrcutoffvalue = 0.1)
@@ -213,4 +227,5 @@ hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out,
 # pdf(paste0(outfilepath, "test_phospho_hm1.pdf"))
 # hm1
 # junk<-dev.off()
+
 

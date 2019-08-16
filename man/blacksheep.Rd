@@ -4,15 +4,14 @@
 \alias{blacksheep}
 \title{Run the entire Blacksheep Function from Start to finish}
 \usage{
-blacksheep(counttable, metatable, analyze_negative_outliers = FALSE,
+blacksheep(se, analyze_negative_outliers = FALSE,
   aggregate_features = FALSE, feature_delineator = "\\\\.",
-  fdrcutoffvalue = 0.1, write_out = FALSE, outfilepath = getwd())
+  fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.1,
+  write_out = FALSE, outfilepath = getwd())
 }
 \arguments{
-\item{counttable}{the count table to analyze}
-
-\item{metatable}{the metatable with each column representing a comparison to
-perform.}
+\item{se}{The SummarizedExperiment object containing the countdata and the
+associated annotation data with comparisons in the colData object.}
 
 \item{analyze_negative_outliers}{DEFAULT: FALSE; Toggle the analysis of
 outliers in the negative direction as well. Will lead to the output of
@@ -30,6 +29,11 @@ separation between primary and secondary features. NOTE: to use proper
 R syntax with escape characters if necessary
 Ex) Protein1.Phosphosite1 uses "\\." to aggregate on Protein1}
 
+\item{fraction_samples_cutoff}{DEFAULT: 0.3; Input a fractional cut off for
+the of samples that need to have an outlier for feature to be
+considered. ex) 10 samples in ingroup - 3 need to have an outlier for
+feature to be considered significant}
+
 \item{fdrcutoffvalue}{DEFAULT: 0.1; The FDR value for significance}
 
 \item{write_out}{DEFAULT: FALSE; write out tables and plots}
@@ -45,10 +49,14 @@ Run the entire Blacksheep Function from Start to finish
 }
 \examples{
 
+library(SummarizedExperiment)
 data("sample_values")
 data("sample_annotations")
 
-blacksheep(counttable = sample_values, metatable = sample_annotations,
+se = SummarizedExperiment(assays = list(counts = as.matrix(sample_values)),
+    colData = DataFrame(sample_annotations))
+
+blacksheep(se = se,
     analyze_negative_outliers = TRUE, aggregate_features = TRUE,
     feature_delineator = "\\\\.", fdrcutoffvalue = 0.1, write_out = FALSE,
     outfilepath = getwd())

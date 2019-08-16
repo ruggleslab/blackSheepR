@@ -1,15 +1,18 @@
 ---
-title: "blackSheepR_Example"
+title: "Outlier Analysis using blackSheepR - Phosphoprotein"
 author: "MacIntosh Cornwell"
 date: "`r format(Sys.Date(), '%m/%d/%Y')`"
-output: html_document
+package: blackSheepR
+output: 
+    BiocStyle::html_document:
+        toc: true
 abstract: >
     BlackSheep is used to perform extreme value analysis in the context of 
     differential comparison between two populations. The basic mechanism is to 
     test the proportions of outliers between the two populations, and assess for
     statistical difference between the proportions of outliers.
 vignette: >
-    %\VignetteIndexEntry{Outlier Analysis using blackSheepR}
+    %\VignetteIndexEntry{Outlier Analysis using blackSheepR - Phosphoprotein}
     %\VignetteEngine{knitr::rmarkdown}
     %\VignetteEncoding{UTF-8}
 ---
@@ -71,40 +74,35 @@ sample_annotations[1:5,1:5]
 ```
 
 
-# Example Workflow - RNA
+# Example Workflow - Phosphoprotein
 In the following section - we will go through an example of using outlier 
-analysis using RNA data. The inputted data is being supplied from 
+analysis using Phosphoprotein data. The inputted data is being supplied from 
 [Github](https://github.com/ruggleslab/blacksheep_supp/tree/master) and is from 
-breast cancer data from TCGA and CPTAC.  
+breast cancer data from TCGA and CPTAC.
+NOTE - that this analysis is more complicated then RNA due to the additional 
+functionality of aggregating together multiple phospho sites per protein. More 
+on this later.
 
-### Read in Data
-Read in the RNA and Annotation table. We will also define a variable
+### Read in Annotation
+Read in the Annotation table. We will also define a variable
 `outfilepath` which is used in a number of functions as a location to save data 
-out to. Examples Below of the tables we will be using:
-```{r read in data - rna, echo = FALSE}
-annotationfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
-                        "outlier-tool/data/brca/annotations_common_samples.csv")
-annotationtable = read.table(annotationfile, header = TRUE, row.names = 1, 
-                na.strings = c("", " ", "NA"), sep = ",", check.names = FALSE)
+out to. This will currently be set to the working directory - but the user can 
+set this to their desired location.
+```{r read in data - phospho, echo = TRUE}
+library(curl)
+annotationtable = read.table(curl(paste0("https://raw.githubusercontent.com/",
+                    "ruggleslab/blacksheep_supp/dev/vignettes/brca/",
+                    "annotations_common_samples.csv")), header = TRUE,
+                    row.names = 1, na.strings = c("", " ", "NA"), sep = ",",
+                    check.names = FALSE, stringsAsFactors = FALSE)
 colnames(annotationtable) = gsub(" ", "_", colnames(annotationtable))
 compcols = annotationtable[,c("PAM50", "ER_Status", "PR_Status",
                         "GATA3_Mutation", "PIK3CA_Mutation", "TP53_Mutation")]
 
-rnacountfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/",
-                      "data/brca/rna_common_samples_data.csv")
-rnatable = read.table(rnacountfile, header = TRUE, row.names = 1, sep = ",", 
-                      quote = "", check.names = FALSE)
-
-outfilepath = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/",
-                     "output_VIGNETTE/")
-dir.create(outfilepath, recursive = TRUE, showWarnings = FALSE)
+outfilepath = getwd()
 
 compcols[1:5,1:5]
 dim(compcols)
-rnatable[1:5,1:5]
-dim(rnatable)
-print("Testing for existance of outfilepath; <dir.exists(outfilepath)>")
-dir.exists(outfilepath)
 
 ```
 
@@ -116,190 +114,15 @@ analysis, so we are going to format our data into readable pairwise information.
 First - we are going to manually make a few edits to change our columns into 
 binary metrics - "mutant" and "none"
 
-``` {r format annotation data1 - rna} 
+``` {r format annotation data1 - phospho, echo=FALSE} 
 ## FORMAT our annotation table
-compcols[,4] = ifelse(is.na(compcols[,4]), "None", "Mutant")
-compcols[,5] = ifelse(is.na(compcols[,5]), "None", "Mutant")
-compcols[,6] = ifelse(is.na(compcols[,6]), "None", "Mutant")
+compcols[,"GATA3_Mutation"] = ifelse(is.na(compcols[,4]), "None", "Mutant")
+compcols[,"PIK3CA_Mutation"] = ifelse(is.na(compcols[,5]), "None", "Mutant")
+compcols[,"TP53_Mutation"] = ifelse(is.na(compcols[,6]), "None", "Mutant")
 head(compcols)
 ```
 
-Then we are going to use a built in utility function `make_comparison_columns` 
-to help turn a multifactor column into several binary columns
-
-``` {r format annotation data2 - rna}
-## Use the make_comparison_columns function to create binary columns
-expanded_compcols = make_comparison_columns(compcols[,1,drop=FALSE])
-## Append new columns to the comparison annotation table
-comptable = cbind(expanded_compcols, compcols[2:ncol(compcols)])
-head(comptable)
-```
-
-
-### Create groupings
-Create the subgroups based on your metadata. Note that the 
-`comparison_groupings` function creates groups by going through the comparison 
-columns, and creating the first subgroup for all of the comparisons, and then 
-creates the second subgroup for all of the comparisons. The order depends on 
-the first subcategory encounted moving down the column. This order will matter
-later on when you look at comparisons, but this information will be contained 
-in the ouput table to avoid confusion, more on this later.
-```{r groupings - rna}
-groupings = comparison_groupings(comptable)
-## Print out the first 6 samples in each of our first 5 groupings
-lapply(groupings, head)[1:5]
-
-```
-
-### Make Outlier table
-The next function `make_outlier_table` will take in the countdata and output a 
-table that has been converted to show outliers. A value of 0 means that it was 
-not an outlier, 1 means it was an outlier in the positive direction, and if the 
-parameter is set to analyze negative outliers, then -1 means an outlier in the 
-negative direction.
-
-The output from this function is a list of objects, that depends on the input 
-and the specified parameters. Namely - it will output a $lowerboundtab only
-if the parameter to analyze negative outliers is turned ON
-
-```{r make outlier table - rna}
-## Perform the function
-reftable_function_out = make_outlier_table(rnatable)
-## See the names of the outputted objects
-names(reftable_function_out)
-## Assign them to individual variables
-outliertab = reftable_function_out$outliertab
-upperboundtab = reftable_function_out$upperboundtab
-sampmedtab = reftable_function_out$sampmedtab
-
-## Note we will only use the outlier table - which looks like this now
-outliertab[1:5,1:5]
-
-```
-
-### Tabulate Outliers
-For each of our groups, run through the outlier table and count up the total 
-number of outliers and nonoutliers. Note that this will output a list of length
-1 - just with the name "grouptablist". In later iterations, parameters will 
-enable different output. For now though - we are just going to use this single
-embedded list
-```{r groupingtablist - rna}
-count_outliers_out = count_outliers(groupings, outliertab)
-grouptablist = count_outliers_out$grouptablist
-
-names(grouptablist)
-```
-
-Each tabulated table has the feature counts, and the stored infor the samples 
-that went into the count
-```{r}
-names(grouptablist[[1]])
-```
-Example of what the feature counts look like:
-```{r}
-head(grouptablist[[1]][[1]])
-```
-Example of what the samples are that went into the analysis:
-```{r}
-grouptablist[[1]][[2]]
-```
-
-
-### Run Outlier Analysis
-With the tabulated tables, run the outlier analysis to look for enrichment of 
-outliers between groups. NOTE that this function has a functionality built in 
-to write out tables to the external file, we will not use this parameter now, 
-but it can be set by turning the to parameter `write_out_tables = TRUE`
-```{r outlier analysis - rna}
-## Run the outlier analysis function
-outlier_analysis_out = outlier_analysis(grouptablist)
-names(outlier_analysis_out)
-lapply(outlier_analysis_out, head)[1]
-```
-
-### Plot Results using Heatmap Generating Function
-After you have your results, its useful to have a snapshot of your results in a 
-figure. blackSheepR includes a utility function to output a heatmap with custom 
-annotations and data. Use the plotting function with the original annotation 
-data, and populate the heatmap with whatever information you want to represent. 
-The outlier_analysis object is used to select the differential genes.
-NOTE that you can write out the plot directly in the function using the given 
-parameter `write_out_plot` or the saved object from the function is a heatmap, 
-so you can open your own pdf and print out using the commented out code below.
-```{r heatmap plotting - rna, fig.keep="none"}
-hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out, 
-                      counttab = rnatable, metatable = comptable, 
-                      fdrcutoffvalue = 0.1)
-
-## To output heatmap to pdf outside of the function
-#pdf(paste0(outfilepath, "test_hm1.pdf"))
-#hm1
-#junk<-dev.off()
-```
-```{r heatmap plotting 1example - rna}
-hm1[[1]]
-```
-
-
-
-
-
-
-# Example Workflow - Phosphoprotein
-In the following section - we will go through an example of using outlier 
-analysis using Phosphoprotein data. The inputted data is being supplied from 
-[Github](https://github.com/ruggleslab/blacksheep_supp/tree/master) and is from 
-breast cancer data from TCGA and CPTAC.
-NOTE - that this analysis is more complicated then RNA due to the additional 
-functionality of aggregating together multiple phospho sites per protein.
-
-### Read in Data
-Read in the Phospho and Annotation table, selecting the last 5 columns of the 
-annotation data to be used as comparison columns. We will also define a variable
-`outfilepath` which is used in a number of functions as a location to save data 
-out to
-```{r read in data - phospho, echo = FALSE}
-annotationfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
-                        "outlier-tool/data/brca/annotations_common_samples.csv")
-annotationtable = read.table(annotationfile, header = TRUE, row.names = 1, 
-                na.strings = c("", " ", "NA"), sep = ",", check.names = FALSE)
-colnames(annotationtable) = gsub(" ", "_", colnames(annotationtable))
-compcols = annotationtable[,c("PAM50", "ER_Status", "PR_Status",
-                        "GATA3_Mutation", "PIK3CA_Mutation", "TP53_Mutation")]
-
-phosphocountfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
-                    "outlier-tool/data/brca/phospho_common_samples_data.csv")
-phosphotable = read.table(phosphocountfile, header = TRUE, row.names = 1, 
-                        sep = ",", quote = "", check.names = FALSE)
-
-outfilepath = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/outlier-tool/",
-                     "output_VIGNETTE/")
-dir.create(outfilepath, recursive = TRUE, showWarnings = FALSE)
-
-compcols[1:5,1:5]
-dim(compcols)
-rnatable[1:5,1:5]
-dim(rnatable)
-print("Testing for existance of outfilepath; <dir.exists(outfilepath)>")
-dir.exists(outfilepath)
-
-```
-
-### Formatting our annotation data
-Before we continue, we are going to format our annotation data to be ready for
-further analysis. The driving concept behind this work is to have a PAIRWISE 
-analysis, so we are going to format our data into readable pairwise information.
-
-First - we are going to manually make a few edits to change our columns into 
-binary metrics - "mutant" and "none"
-
-``` {r format annotation data1 - phospho} 
-## FORMAT our annotation table
-compcols[,4] = ifelse(is.na(compcols[,4]), "None", "Mutant")
-compcols[,5] = ifelse(is.na(compcols[,5]), "None", "Mutant")
-compcols[,6] = ifelse(is.na(compcols[,6]), "None", "Mutant")
-head(compcols)
-```
+#### Using the make_comparison_columns utility function
 Then we are going to use a built in utility function `make_comparison_columns` 
 to help turn a multifactor column into several binary columns
 
@@ -307,9 +130,109 @@ to help turn a multifactor column into several binary columns
 ## Use the make_comparison_columns function to create binary columns
 expanded_compcols = make_comparison_columns(compcols[,1,drop=FALSE])
 ## Append new columns to the comparison annotation table
-comptable = cbind(expanded_compcols, compcols[2:ncol(compcols)])
+comptable = cbind.data.frame(expanded_compcols, compcols[2:ncol(compcols)],
+                             stringsAsFactors = FALSE)
 head(comptable)
 ```
+
+### Read in the phospho data
+Next we need to have the actual count data that we are analyzing. Note that 
+this data is made up of features - proteins - that then have a number of 
+subfeatures - phosphorylation sites. This aspect of the data will directly 
+relate to later analysis, as blacksheep will AGGREGATE on this data and 
+collapse the data onto the primary feature. More on this later.
+```{r}
+phosphocountfile = paste0("/Users/tosh/Desktop/Ruggles_Lab/projects/",
+                    "outlier-tool/data/brca/phospho_common_samples_data.csv")
+phosphotable = read.table(phosphocountfile, header = TRUE, row.names = 1, 
+                        sep = ",", quote = "", check.names = FALSE)
+
+phosphotable[1:5,1:5]
+dim(phosphotable)
+```
+
+### Creating a SummarizedExperiment from our data.
+Blacksheep - as a part of the Bioconductor universe - starts from a single 
+object that contains the assay of interest, and the underlying metadata. A 
+`SummarizedExperiment` object is easy to create - and helps ensure that there 
+is no misalignment between the data and the metadata associated with each 
+sample.
+NOTE - as demonstrated below that the count data must be formatted as a MATRIX 
+and the annotation data must be formatted as a DATAFRAME.
+```{r summarized experiment}
+suppressPackageStartupMessages(library(SummarizedExperiment))
+
+blacksheep_SE = SummarizedExperiment(
+    assays=list(counts=as.matrix(phosphotable)), 
+    colData=DataFrame(comptable))
+blacksheep_SE
+```
+
+### Running BlackSheep
+The blacksheep function has a number of steps to it that are individually 
+described below. Note though that the individual steps only need to be used for 
+specific query or alteration. In the general case, the `blacksheep` function on 
+its own should be sufficient for the desired analysis.
+```{r blacksheep, fig.keep="none"}
+blacksheep_out = blacksheep(se = blacksheep_SE, 
+    analyze_negative_outliers = FALSE, aggregate_features = TRUE, 
+    feature_delineator = "-", fdrcutoffvalue = 0.1, write_out = FALSE)
+```
+
+The output from blacksheep are lists with the desired results. The number of 
+lists depends on the parameters. Their is an `outlier_analysis` and a 
+`significant_heatmaps` for the positive outliers (2 total) and for negative 
+outliers (2 more) if the parameter is turned on. In this example, we only ran 
+analysis for positive outliers. So the output will be 2 items long.
+
+The `outlier_analysis` is a nested list of analyses - with one anaysis per 
+comparison columns
+```{r}
+names(blacksheep_out$pos_outlier_analysis)
+```
+
+Each of these entries is a table of analysis - which can be accessed directly 
+for further analysis, or writing out.
+```{r}
+head(blacksheep_out$pos_outlier_analysis$
+    outlieranalysis_for_PAM50_Her2__Her2_vs_PAM50_Her2__not_Her2)
+```
+
+The heatmaps serve as a snapshot of the significant genes that met the 
+parameterized fdr cutoff in the `blacksheep` function can. They can be accessed 
+in a similar manner to the analysis tables. NOTE though that there will only be 
+a heatmap if there were ANY significant genes. If there were no genes that met 
+the fdr cut off - then there will be no heatmap generated
+```{r}
+names(blacksheep_out$significant_pos_heatmaps)
+```
+
+The heatmap objects themselves are `ComplexHeatmap` objects - and will be drawn 
+when called - which will output in the default Rplot, in the plot window of 
+Rstudio, or can be called in the context of a pdf file to output the plot
+
+```{r}
+blacksheep_out$significant_pos_heatmaps$
+    print_outlieranalysis_for_PAM50_Basal__not_Basal_vs_PAM50_Basal__Basal
+
+## NOT RUN
+## To output separately to pdf
+#pdf(outfile.pdf)
+#blacksheep_out$significant_pos_heatmaps$
+#    print_outlieranalysis_for_PAM50_Basal__not_Basal_vs_PAM50_Basal__Basal
+#dev.off()
+```
+
+
+
+
+# Piecewise analysis - PHOSPHO
+THIS SECTION ASSUMES THAT THE PREVIOUS STEPS FOR READING IN THE DATA AND 
+ANNOTATIONS HAS BEEN COMPLETED.
+The next section demonstrates the individual steps of blacksheep. NOTE that the 
+user may never need to call the specific steps, but if specific tweaks are 
+needed, or if an intermediate step needs to be extracted, then this workflow 
+can be followed to see how the analysis is generated.
 
 ### Create groupings
 Create the subgroups based on your metadata. Note that the 
@@ -447,6 +370,12 @@ hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out,
 ```{r heatmap plotting 1example - phospho}
 hm1[[1]]
 ```
+
+
+
+
+
+
 
 
 
