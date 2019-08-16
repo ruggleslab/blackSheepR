@@ -13,3 +13,4 @@ RPackage/BlackSheep/tests/.DS_Store
 .Rhistory
 RPackage/BlackSheep/.Rhistory
 blackSheepR.Rproj
+.Rbuildignore
