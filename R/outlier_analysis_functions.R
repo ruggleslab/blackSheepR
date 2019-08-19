@@ -368,7 +368,7 @@ outlier_analysis <- function(grouptablist,
                         fraction_table = NULL, fraction_samples_cutoff = 0.3,
                         write_out_tables = FALSE, outfilepath = getwd()) {
     ## Define blank starting lists
-    outtablelist = statoutlist = list()
+    outtablelist = list()
     ## Create comparison matrix
     groupcombos = matrix(names(grouptablist),
                         nrow=(length(grouptablist)/2), ncol = 2)
@@ -385,54 +385,53 @@ outlier_analysis <- function(grouptablist,
         ## outliers in A than B, are there more neg outliers in A than B, are
         ## there more pos outliers in B than A, are there more neg outliers in
         ## B than A
-        for (fishtestgene in seq_len(nrow(group1tab))) {
-            # function that will do the work of dividing the subgroup tables
-            # into up and down directions, and perform the fisher test group1tab
-            # and group2tab are binary tables for the subgroups, count is the
-            # gene count (to work with the loop) and sidedness if "up"/"down"
-            split_and_fish <- function(group1tab, group2tab, count, sidedness){
-                if (sidedness=="up"){sigval = "1"}
-                if (sidedness=="down"){sigval = "-1"}
-                conttab = cbind(t(group1tab[count,c(sigval,"0"), drop=FALSE]),
-                                t(group2tab[count,c(sigval,"0"), drop=FALSE]))
-                colnames(conttab) = c("group1","group2")
-                return(fisher.test(conttab, alternative = "greater")$p.value)
-            }
 
-            if ("1" %in% colnames(group1tab)) {
-                upstatgroup1 = split_and_fish(group1tab, group2tab,
-                                            fishtestgene, "up")
-                upstatgroup2 = split_and_fish(group2tab, group1tab,
-                                            fishtestgene, "up")
-            } else { upstatgroup1 = upstatgroup2 = NULL }
+        ## Vectorized split_and_fish - extracting pval for each comparison
+        comptab1 = merge(group2tab, group1tab, by = "row.names")
+        comptab1a = data.frame(comptab1, row.names = comptab1[,1])[,2:5]
+        comptab2 = merge(group1tab, group2tab, by = "row.names")
+        comptab2a = data.frame(comptab2, row.names = comptab2[,1])[,2:5]
 
-            if ("-1" %in% colnames(group1tab)) {
-                downstatgroup1 = split_and_fish(
-                    group1tab, group2tab, fishtestgene, "down")
-                downstatgroup2 = split_and_fish(
-                    group2tab, group1tab, fishtestgene, "down")
-            } else { downstatgroup1 = downstatgroup2 = NULL }
-            statoutlist[[fishtestgene]] = c(upstatgroup1, upstatgroup2,
-                                            downstatgroup1, downstatgroup2)
-            names(statoutlist)[fishtestgene] = rownames(group1tab)[fishtestgene]
+        split_and_fish2 <- function(combined_grouptab, sidedness){
+            sigval = ifelse(sidedness=="up", 1, -1)
+            # if (sidedness=="up"){sigval = "1"}
+            # if (sidedness=="down"){sigval = "-1"}
+            conttab = matrix(unlist(combined_grouptab), nrow = 2, ncol = 2,
+                        dimnames = list(c("0", sigval), c("group1","group2")))
+
+            return(fisher.test(conttab, alternative = "greater")$p.value)
         }
 
-        ## Write out the values from the fisher test
-        fishout = do.call(rbind, statoutlist)
+        if ("1" %in% colnames(group1tab)) {
+            upstatgroup1 = apply(comptab1a, 1, split_and_fish2,
+                                sidedness = "up")
+            upstatgroup2 = apply(comptab2a, 1, split_and_fish2,
+                                sidedness = "up")
+        } else { upstatgroup1 = upstatgroup2 = NULL }
+
+        if ("-1" %in% colnames(group1tab)) {
+            downstatgroup1 = apply(comptab1a, 1, split_and_fish2,
+                                    sidedness = "down")
+            downstatgroup2 = apply(comptab2a, 1, split_and_fish2,
+                                    sidedness = "down")
+        } else { downstatgroup1 = downstatgroup2 = NULL }
+
+        fishout = cbind(upstatgroup1, upstatgroup2,
+                        downstatgroup1, downstatgroup2)
 
         if (ncol(fishout) == 4) {colnames(fishout) = c(
             paste0("pval_more_pos_outliers_in_",
-                    groupcombos[groupcombonum,c(1,2)]),
+                   groupcombos[groupcombonum,c(1,2)]),
             paste0("pval_more_neg_outliers_in_",
-                    groupcombos[groupcombonum,c(1,2)]))
+                   groupcombos[groupcombonum,c(1,2)]))
         } else {
             if ("1" %in% colnames(group1tab)) {
                 colnames(fishout)[c(1,2)] =
                     paste0("pval_more_pos_outliers_in_",
-                            groupcombos[groupcombonum,c(1,2)])
+                           groupcombos[groupcombonum,c(1,2)])
             } else {colnames(fishout)[c(1,2)] =
                 paste0("pval_more_neg_outliers_in_",
-                        groupcombos[groupcombonum,c(1,2)]) }
+                       groupcombos[groupcombonum,c(1,2)]) }
         }
 
         #### RAW NUMBER FILTER

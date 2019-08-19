@@ -174,7 +174,7 @@ described below. Note though that the individual steps only need to be used for
 specific query or alteration. In the general case, the `blacksheep` function on 
 its own should be sufficient for the desired analysis.
 ```{r deva, fig.keep="none"}
-blacksheep_out = deva(se = blacksheep_SE, 
+deva_out = deva(se = blacksheep_SE, 
     analyze_negative_outliers = FALSE, aggregate_features = TRUE, 
     feature_delineator = "-", fdrcutoffvalue = 0.1, write_out = FALSE)
 ```
@@ -188,13 +188,13 @@ analysis for positive outliers. So the output will be 2 items long.
 The `outlier_analysis` is a nested list of analyses - with one anaysis per 
 comparison columns
 ```{r}
-names(blacksheep_out$pos_outlier_analysis)
+names(deva_out$pos_outlier_analysis)
 ```
 
 Each of these entries is a table of analysis - which can be accessed directly 
 for further analysis, or writing out.
 ```{r}
-head(blacksheep_out$pos_outlier_analysis$
+head(deva_out$pos_outlier_analysis$
     outlieranalysis_for_PAM50_Her2__Her2_vs_PAM50_Her2__not_Her2)
 ```
 
@@ -204,7 +204,7 @@ in a similar manner to the analysis tables. NOTE though that there will only be
 a heatmap if there were ANY significant genes. If there were no genes that met 
 the fdr cut off - then there will be no heatmap generated
 ```{r}
-names(blacksheep_out$significant_pos_heatmaps)
+names(deva_out$significant_pos_heatmaps)
 ```
 
 The heatmap objects themselves are `ComplexHeatmap` objects - and will be drawn 
@@ -212,13 +212,13 @@ when called - which will output in the default Rplot, in the plot window of
 Rstudio, or can be called in the context of a pdf file to output the plot
 
 ```{r}
-blacksheep_out$significant_pos_heatmaps$
+deva_out$significant_pos_heatmaps$
     print_outlieranalysis_for_PAM50_Basal__not_Basal_vs_PAM50_Basal__Basal
 
 ## NOT RUN
 ## To output separately to pdf
 #pdf(outfile.pdf)
-#blacksheep_out$significant_pos_heatmaps$
+#deva_out$significant_pos_heatmaps$
 #    print_outlieranalysis_for_PAM50_Basal__not_Basal_vs_PAM50_Basal__Basal
 #dev.off()
 ```
