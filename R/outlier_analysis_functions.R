@@ -421,17 +421,17 @@ outlier_analysis <- function(grouptablist,
 
         if (ncol(fishout) == 4) {colnames(fishout) = c(
             paste0("pval_more_pos_outliers_in_",
-                   groupcombos[groupcombonum,c(1,2)]),
+                    groupcombos[groupcombonum,c(1,2)]),
             paste0("pval_more_neg_outliers_in_",
-                   groupcombos[groupcombonum,c(1,2)]))
+                    groupcombos[groupcombonum,c(1,2)]))
         } else {
             if ("1" %in% colnames(group1tab)) {
                 colnames(fishout)[c(1,2)] =
                     paste0("pval_more_pos_outliers_in_",
-                           groupcombos[groupcombonum,c(1,2)])
+                            groupcombos[groupcombonum,c(1,2)])
             } else {colnames(fishout)[c(1,2)] =
                 paste0("pval_more_neg_outliers_in_",
-                       groupcombos[groupcombonum,c(1,2)]) }
+                        groupcombos[groupcombonum,c(1,2)]) }
         }
 
         #### RAW NUMBER FILTER
