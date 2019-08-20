@@ -1,11 +1,11 @@
-Package: blackSheepR
+Package: blacksheepr
 Type: Package
 Title: Outlier Analysis for pairwise differential comparison
-Version: 0.99.4
+Version: 0.99.5
 Authors@R: c(person("MacIntosh", "Cornwell", 
     email="macintosh.cornwell@nyulangone.org", 	role = c("aut")), 
 	person("RugglesLab", email = "ruggleslab@gmail.com", role = "cre"))
-Description: BlackSheep is a tool designed for outlier analysis in the context 
+Description: Blacksheep is a tool designed for outlier analysis in the context 
     of pairwise comparisons in an effort to find distinguishing characteristics 
     from two groups. This tool was designed to be applied for biological 
     applications such as phosphoproteomics or transcriptomics, but it can be 

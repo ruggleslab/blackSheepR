@@ -5,7 +5,7 @@
 ## Outlier Analysis
 
 
-library(blackSheepR)
+library(blacksheepr)
 
 library(curl)
 annotationtable = read.table(curl(paste0("https://raw.githubusercontent.com/",

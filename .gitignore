@@ -1,16 +1,7 @@
-pythonPackage/.idea/*
-pythonPackage/.idea*
-.idea/*
 ~*
 #*
 .Rproj.user
 .DS_Store
-RPackage/.DS_Store
-RPackage/BlackSheep/.DS_Store
-RPackage/BlackSheep/data/.DS_Store
-RPackage/BlackSheep/inst/.DS_Store
-RPackage/BlackSheep/tests/.DS_Store
 .Rhistory
-RPackage/BlackSheep/.Rhistory
-blackSheepR.Rproj
+blacksheepr.Rproj
 .Rbuildignore

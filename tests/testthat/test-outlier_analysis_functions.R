@@ -1,5 +1,5 @@
-context("blackSheepR Functions")
-library(blackSheepR)
+context("blacksheepr Functions")
+library(blacksheepr)
 
 test_that("grouping function works", {
     data("sample_annotations")
@@ -93,7 +93,7 @@ test_that("plotting the heatmap works", {
 
     hm1 = outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
                     sample_values, sample_annotations, fdrcutoffvalue = 0.1,
-                    outfilepath = getwd())
+                    write_out_plot = FALSE, outfilepath = getwd())
 
     ## Test to see if the number of analyses that have significant genes also
     ## have heatmaps

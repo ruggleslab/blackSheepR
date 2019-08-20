@@ -2,7 +2,7 @@
 % Please edit documentation in R/outlier_analysis_functions.R
 \name{deva}
 \alias{deva}
-\title{Run the entire Blacksheep Function from Start to finish}
+\title{Run the entire blacksheep Function from Start to finish}
 \usage{
 deva(se, analyze_negative_outliers = FALSE, aggregate_features = FALSE,
   feature_delineator = "\\\\.", fraction_samples_cutoff = 0.3,
@@ -44,7 +44,7 @@ DEFAULT is current working directory}
 outputs a pdf with the heatmap in the current working directory
 }
 \description{
-Run the entire Blacksheep Function from Start to finish
+Run the entire blacksheep Function from Start to finish
 }
 \examples{
 

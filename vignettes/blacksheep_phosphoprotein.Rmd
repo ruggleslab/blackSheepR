@@ -1,18 +1,18 @@
 ---
-title: "Outlier Analysis using blackSheepR - Phosphoprotein"
+title: "Outlier Analysis using blacksheepr - Phosphoprotein"
 author: "MacIntosh Cornwell"
 date: "`r format(Sys.Date(), '%m/%d/%Y')`"
-package: blackSheepR
+package: blacksheepr
 output: 
     BiocStyle::html_document:
         toc: true
 abstract: >
-    BlackSheep is used to perform extreme value analysis in the context of 
+    blacksheep is used to perform extreme value analysis in the context of 
     differential comparison between two populations. The basic mechanism is to 
     test the proportions of outliers between the two populations, and assess for
     statistical difference between the proportions of outliers.
 vignette: >
-    %\VignetteIndexEntry{Outlier Analysis using blackSheepR - Phosphoprotein}
+    %\VignetteIndexEntry{Outlier Analysis using blacksheepr - Phosphoprotein}
     %\VignetteEngine{knitr::rmarkdown}
     %\VignetteEncoding{UTF-8}
 ---
@@ -27,13 +27,13 @@ the context of the rest of the population. In biological contexts, exploring the
 shift in proportion of these outliers can elucidate differences between 
 subpopulations, suggesting potential differential characteristics that can be 
 further explored.
-BlackSheep is a project that was developed in an effort to refine this analysis 
+blacksheep is a project that was developed in an effort to refine this analysis 
 to a functional tool for outlier analysis in the context of biological data. 
 This data can take many forms: protein, phosphoprotein, RNA, CNA, etc. The input
-for Blacksheep is count data of some form, and annotation data indicative of the
+for blacksheep is count data of some form, and annotation data indicative of the
 populations for comparison.
 This vignette will run through a few standard use-cases, illustrating the 
-functionality of BlackSheep and hopefully answering questions and showing its 
+functionality of blacksheep and hopefully answering questions and showing its 
 usefulness in biological exploration.
 
 ## Installation:
@@ -43,11 +43,11 @@ following lines to install:
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-BiocManager::install("blackSheepR")
+BiocManager::install("blacksheepr")
 ```
 Loading the library is done by using the `library` call
 ```{r library call}
-library(blackSheepR)
+library(blacksheepr)
 ```
 
 ## Input Data
@@ -56,7 +56,7 @@ Count data should be a table of counts with samples along the x-axis, and
 features along the y-axis, with the labels being rownames and colnames.
 
 ```{r countdata example}
-library(blackSheepR)
+library(blacksheepr)
 data("sample_values")
 sample_values[1:5,1:5]
 ```
@@ -152,7 +152,7 @@ dim(phosphotable)
 ```
 
 ### Creating a SummarizedExperiment from our data.
-Blacksheep - as a part of the Bioconductor universe - starts from a single 
+blacksheep - as a part of the Bioconductor universe - starts from a single 
 object that contains the assay of interest, and the underlying metadata. A 
 `SummarizedExperiment` object is easy to create - and helps ensure that there 
 is no misalignment between the data and the metadata associated with each 
@@ -168,7 +168,7 @@ blacksheep_SE = SummarizedExperiment(
 blacksheep_SE
 ```
 
-### Running BlackSheep
+### Running blacksheep
 The blacksheep function has a number of steps to it that are individually 
 described below. Note though that the individual steps only need to be used for 
 specific query or alteration. In the general case, the `blacksheep` function on 
@@ -347,7 +347,7 @@ lapply(outlier_analysis_out, head)[1]
 
 #### Plot Results using Heatmap Generating Function
 After you have your results, its useful to have a snapshot of your results in a 
-figure. blackSheepR includes a utility function to output a heatmap with custom 
+figure. blacksheepr includes a utility function to output a heatmap with custom 
 annotations and data. Use the plotting function with the original annotation 
 data, and populate the heatmap with whatever information you want to represent. 
 In this case, we are going to populate the table with the fractions of outliers 

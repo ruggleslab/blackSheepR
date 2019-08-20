@@ -2,7 +2,7 @@
 # Name: MacIntosh Cornwell
 # Email: mcornwell1957@gmail.com
 ################################
-## Blacksheep Script File
+## blacksheep Script File
 
 
 ## MAKE COMPARISON COLUMNS
@@ -392,10 +392,8 @@ outlier_analysis <- function(grouptablist,
         comptab2 = merge(group1tab, group2tab, by = "row.names")
         comptab2a = data.frame(comptab2, row.names = comptab2[,1])[,2:5]
 
-        split_and_fish2 <- function(combined_grouptab, sidedness){
+        split_and_fish <- function(combined_grouptab, sidedness){
             sigval = ifelse(sidedness=="up", 1, -1)
-            # if (sidedness=="up"){sigval = "1"}
-            # if (sidedness=="down"){sigval = "-1"}
             conttab = matrix(unlist(combined_grouptab), nrow = 2, ncol = 2,
                         dimnames = list(c("0", sigval), c("group1","group2")))
 
@@ -403,16 +401,14 @@ outlier_analysis <- function(grouptablist,
         }
 
         if ("1" %in% colnames(group1tab)) {
-            upstatgroup1 = apply(comptab1a, 1, split_and_fish2,
-                                sidedness = "up")
-            upstatgroup2 = apply(comptab2a, 1, split_and_fish2,
-                                sidedness = "up")
+            upstatgroup1 = apply(comptab1a, 1, split_and_fish, sidedness = "up")
+            upstatgroup2 = apply(comptab2a, 1, split_and_fish, sidedness = "up")
         } else { upstatgroup1 = upstatgroup2 = NULL }
 
         if ("-1" %in% colnames(group1tab)) {
-            downstatgroup1 = apply(comptab1a, 1, split_and_fish2,
+            downstatgroup1 = apply(comptab1a, 1, split_and_fish,
                                     sidedness = "down")
-            downstatgroup2 = apply(comptab2a, 1, split_and_fish2,
+            downstatgroup2 = apply(comptab2a, 1, split_and_fish,
                                     sidedness = "down")
         } else { downstatgroup1 = downstatgroup2 = NULL }
 
@@ -622,7 +618,7 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 
 
 ## COMPLETE BLACKSHEEP FUNCTION
-#' Run the entire Blacksheep Function from Start to finish
+#' Run the entire blacksheep Function from Start to finish
 #' @param se The SummarizedExperiment object containing the countdata and the
 #'     associated annotation data with comparisons in the colData object.
 #' @param analyze_negative_outliers DEFAULT: FALSE; Toggle the analysis of
