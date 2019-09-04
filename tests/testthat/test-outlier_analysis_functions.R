@@ -97,9 +97,8 @@ test_that("plotting the heatmap works", {
 
     ## Test to see if the number of analyses that have significant genes also
     ## have heatmaps
-    expect_equal(length(hm1), sum(unlist(lapply(
-        outlier_analysis_out, function(x)
-            length(x[rowSums(
-                x[ ,grepl("fdr", colnames(x))] < 0.1) >= 1,1]))>0)))
+    expect_equal(length(hm1), sum(unlist(
+        lapply(outlier_analysis_out, function(x)
+            sum(rowSums(x[,c(4,5)] < 0.1) == 2) > 0))))
 
 })

@@ -131,7 +131,7 @@ to help turn a multifactor column into several binary columns
 expanded_compcols = make_comparison_columns(compcols[,1,drop=FALSE])
 ## Append new columns to the comparison annotation table
 comptable = cbind.data.frame(expanded_compcols, compcols[2:ncol(compcols)],
-                             stringsAsFactors = FALSE)
+                            stringsAsFactors = FALSE)
 head(comptable)
 ```
 
@@ -176,7 +176,8 @@ its own should be sufficient for the desired analysis.
 ```{r deva, fig.keep="none"}
 deva_out = deva(se = blacksheep_SE, 
     analyze_negative_outliers = FALSE, aggregate_features = TRUE, 
-    feature_delineator = "-", fdrcutoffvalue = 0.1, write_out = FALSE)
+    feature_delineator = "-", fraction_samples_cutoff = 0.3, 
+    fdrcutoffvalue = 0.1, write_out = FALSE)
 ```
 
 The output from blacksheep are lists with the desired results. The number of 
@@ -213,7 +214,7 @@ Rstudio, or can be called in the context of a pdf file to output the plot
 
 ```{r}
 deva_out$significant_pos_heatmaps$
-    print_outlieranalysis_for_PAM50_Basal__not_Basal_vs_PAM50_Basal__Basal
+    print_outlieranalysis_for_PAM50_Her2__Her2_vs_PAM50_Her2__not_Her2
 
 ## NOT RUN
 ## To output separately to pdf
@@ -255,9 +256,15 @@ not an outlier, 1 means it was an outlier in the positive direction, and if the
 parameter is set to analyze negative outliers, then -1 means an outlier in the 
 negative direction.
 
+The output from this function is a list of objects, that depends on the input 
+and the specified parameters. Namely - it will output a $upperboundtab only
+if the parameter to analyze_negative_outliers is turned OFF, and $lowerboundtab 
+if the analyze_negative_outliers parameter is turned ON
+
 ```{r make outlier table - phospho}
 ## Perform the function
-reftable_function_out = make_outlier_table(phosphotable)
+reftable_function_out = make_outlier_table(phosphotable,
+                                        analyze_negative_outliers = FALSE)
 ## See the names of the outputted objects
 names(reftable_function_out)
 ## Assign them to individual variables
@@ -286,10 +293,10 @@ Feature 1
 
 The output with `aggregate_features = TRUE` will contain two additional 
 objects. It will output the normal outliertable, and boundary tables, and also 
-the "aggoutlierstab" and "aggfractiontab"
+the "aggoutlierstab" and "fractiontab"
 The "aggoutlierstab" will be the collapsed table, summing up the number of 
 outliers per feature
-The "aggfractiontab" returns the % outliers per feature per sample, given 
+The "fractiontab" returns the % outliers per feature per sample, given 
 available information - this will be IMPORTANT FOR FURTHER FILTERING later on.
 ex) 1,0,0 >> 1/3
 ex) 1,0,NA >> 1/2
@@ -299,7 +306,7 @@ count_outliers_out = count_outliers(groupings, outliertab,
                         aggregate_features = TRUE, feature_delineator = "-")
 grouptablist = count_outliers_out$grouptablist
 aggoutliertab = count_outliers_out$aggoutliertab
-aggfractiontab = count_outliers_out$aggfractiontab
+fractiontab = count_outliers_out$fractiontab
 
 names(grouptablist)
 ```
@@ -307,16 +314,16 @@ names(grouptablist)
 Each tabulated table has the feature counts, and the stored infor the samples 
 that went into the count
 ```{r}
-names(grouptablist[[1]])
+names(grouptablist$PAM50_Her2__Her2)
 ```
 Example of what the feature counts look like:
 ```{r}
-head(grouptablist[[1]][[1]])
+head(grouptablist$PAM50_Her2__Her2$feature_counts)
 ```
 
 Example of what the samples are that went into the analysis:
 ```{r}
-grouptablist[[1]][[2]]
+grouptablist$PAM50_Her2__Her2$samples
 ```
 
 #### Run Outlier Analysis
@@ -326,7 +333,7 @@ to write out tables to the external file, we will not use this parameter now,
 but it can be set by turning the to parameter `write_out_tables = TRUE`
 
 In this outlier analysis - we will have an additional filter included. The 
-`aggfractiontab` outputted in the previous step has a metric that measure the 
+`fractiontab` outputted in the previous step has a metric that measure the 
 number of samples in each group that have an outlier in them. In this next step 
 we will use this information to filter for features that only have at least 
 `0.3` (30%) of samples with an outlier. This filter is important because our 
@@ -338,11 +345,12 @@ analysis by only picking out features that have multiple samples with outliers.
 NOTE that this can be omitted by just leaving the `fraction_table` parameter 
 out or as a `NULL`
 ```{r outlier analysis - phospho}
-outlier_analysis_out = outlier_analysis(grouptablist,
-                                        fraction_table = aggfractiontab,
+outlier_analysis_out = outlier_analysis(grouptablist = grouptablist,
+                                        fraction_table = fractiontab,
                                         fraction_samples_cutoff = 0.3)
 names(outlier_analysis_out)
-lapply(outlier_analysis_out, head)[1]
+head(outlier_analysis_out$
+        outlieranalysis_for_PAM50_Her2__Her2_vs_PAM50_Her2__not_Her2)
 ```
 
 #### Plot Results using Heatmap Generating Function
@@ -362,7 +370,7 @@ will NOT order it for you.
 plottable = comptable[do.call(order, c(decreasing = TRUE, 
                             data.frame(comptable[,1:ncol(comptable)]))),]
 hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out, 
-                counttab = aggfractiontab, metatable = comptable, 
+                counttab = fractiontab, metatable = plottable, 
                 fdrcutoffvalue = 0.1)
 
 ## To output heatmap to pdf outside of the function
@@ -372,7 +380,7 @@ hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out,
 ```
 
 ```{r heatmap plotting example - phospho, fig.cap = "Example outputted Heatmap"}
-hm1[[2]]
+hm1$print_outlieranalysis_for_PAM50_Her2__Her2_vs_PAM50_Her2__not_Her2
 ```
 
 

@@ -6,12 +6,12 @@
 \title{Sample_annotation Data}
 \format{A data frame with 18 rows and 5 variables:
 \describe{
-  \item{comp0}{comparison example 1}
-  \item{comp1}{comparison example 2}
-  \item{comp2}{comparison example 3}
-  \item{comp3}{comparison example 4}
-  \item{comp4}{comparison example 5}
-  ...
+    \item{comp0}{comparison example 1}
+    \item{comp1}{comparison example 2}
+    \item{comp2}{comparison example 3}
+    \item{comp3}{comparison example 4}
+    \item{comp4}{comparison example 5}
+    ...
 }}
 \usage{
 sample_annotations

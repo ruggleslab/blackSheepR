@@ -6,6 +6,10 @@
 
 ## WRITE HEATMAP FUNCTION
 #' Plot out a heatmap
+#' @usage create_heatmap(counttab = counttab,
+#'     colmetatable = NULL, colannotationlist = NULL,
+#'     colclusterparam = FALSE, rowclusterparam = FALSE,
+#'     nameparam, write_out_plot = FALSE, pdfoutfile = pdfoutfile)
 #' @param counttab table with counts, samples -x-axis, features -y-axis
 #' @param colmetatable the metatable containing information for the columns
 #' @param colannotationlist annotation table for columns, based off colmetatable

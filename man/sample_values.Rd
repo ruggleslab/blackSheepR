@@ -6,9 +6,9 @@
 \title{Sample_values Data}
 \format{A data frame with 18 rows and 21 variables:
 \describe{
-  \item{geneA.site1}{Gene A, example site 1}
-  \item{geneB.site1}{Gene B, example site 1}
-  ...
+    \item{geneA.site1}{Gene A, example site 1}
+    \item{geneB.site1}{Gene B, example site 1}
+    ...
 }}
 \usage{
 sample_values

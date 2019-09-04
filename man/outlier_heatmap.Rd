@@ -6,9 +6,9 @@
     fisher exact test to get the p.value for the difference in outlier count
     for each feature in each of your comparisons}
 \usage{
-outlier_heatmap(outlier_analysis_out, analysis_num = NULL, counttab,
-  metatable, fdrcutoffvalue = 0.1, write_out_plot = FALSE,
-  outfilepath = getwd())
+outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
+    counttab, metatable, fdrcutoffvalue = 0.1,
+    write_out_plot = FALSE, outfilepath = getwd())
 }
 \arguments{
 \item{outlier_analysis_out}{the full outlier_analysis data objet}
@@ -45,14 +45,18 @@ outliertab = reftable_function_out$outliertab
 data("sample_annotations")
 groupings = comparison_groupings(sample_annotations)
 
-grouptablist = count_outliers(groupings, outliertab)$grouptablist
+count_outliers_out = count_outliers(groupings, outliertab,
+    aggregate_features = FALSE)
+grouptablist = count_outliers_out$grouptablist
+fractiontab = count_outliers_out$fractiontab
 
-outlier_analysis_out = outlier_analysis(grouptablist)
+outlier_analysis_out = outlier_analysis(grouptablist,
+    fraction_table = fractiontab)
 
 metatable = sample_annotations
 counttab = sample_values
 
 hm1 = outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
-    counttab, metatable, fdrcutoffvalue = 0.1)
+    fractiontab, metatable, fdrcutoffvalue = 0.1)
 }
 \keyword{outliers}

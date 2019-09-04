@@ -4,10 +4,10 @@
 \alias{create_heatmap}
 \title{Plot out a heatmap}
 \usage{
-create_heatmap(counttab = counttab, colmetatable = NULL,
-  colannotationlist = NULL, colclusterparam = FALSE,
-  rowclusterparam = FALSE, nameparam, write_out_plot = FALSE,
-  pdfoutfile = pdfoutfile)
+create_heatmap(counttab = counttab,
+    colmetatable = NULL, colannotationlist = NULL,
+    colclusterparam = FALSE, rowclusterparam = FALSE,
+    nameparam, write_out_plot = FALSE, pdfoutfile = pdfoutfile)
 }
 \arguments{
 \item{counttab}{table with counts, samples -x-axis, features -y-axis}
