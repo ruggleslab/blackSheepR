@@ -36,8 +36,8 @@ If Aggregating - this will output the aggregate count and fraction table
 for your reference.
 }
 \examples{
-data("sample_values")
-reftable_function_out = make_outlier_table(sample_values,
+data("sample_phosphodata")
+reftable_function_out = make_outlier_table(sample_phosphodata,
     analyze_negative_outliers = TRUE)
 outliertab = reftable_function_out$outliertab
 upperboundtab = reftable_function_out$upperboundtab

@@ -1,1 +1,5 @@
-Test Release of BlackSheep
+Changes in version 0.99.7 (2019-09-10)
++ Submitted to Bioconductor
++ Fixed Reviewer suggestions
+  o Got rid of lazydata loading in DESCRIPTION
+  o properly formetted NEWS object

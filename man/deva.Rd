@@ -6,8 +6,7 @@
 \usage{
 deva(se, analyze_negative_outliers = FALSE,
     aggregate_features = FALSE, feature_delineator = "\\\\.",
-    fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.01,
-    write_out = FALSE, outfilepath = getwd())
+    fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.01)
 }
 \arguments{
 \item{se}{The SummarizedExperiment object containing the countdata and the
@@ -35,11 +34,6 @@ considered. ex) 10 samples in ingroup - 3 need to have an outlier for
 feature to be considered significant}
 
 \item{fdrcutoffvalue}{DEFAULT: 0.1; The FDR value for significance}
-
-\item{write_out}{DEFAULT: FALSE; write out tables and plots}
-
-\item{outfilepath}{the full string path to where the file should output to,
-DEFAULT is current working directory}
 }
 \value{
 outputs a pdf with the heatmap in the current working directory
@@ -49,16 +43,19 @@ Run the entire blacksheep Function from Start to finish
 }
 \examples{
 
-library(SummarizedExperiment)
-data("sample_values")
-data("sample_annotations")
+suppressPackageStartupMessages(library(SummarizedExperiment))
+data("sample_phosphodata")
+data("sample_annotationdata")
 
-se = SummarizedExperiment(assays = list(counts = as.matrix(sample_values)),
-    colData = DataFrame(sample_annotations))
+se = SummarizedExperiment(
+    assays = list(counts = as.matrix(sample_phosphodata)),
+    colData = DataFrame(sample_annotationdata))
 
 deva(se = se,
-    analyze_negative_outliers = TRUE, aggregate_features = TRUE,
-    feature_delineator = "\\\\.", fdrcutoffvalue = 0.1, write_out = FALSE,
-    outfilepath = getwd())
+    analyze_negative_outliers = FALSE, aggregate_features = TRUE,
+    feature_delineator = "-", fraction_samples_cutoff = 0.3,
+    fdrcutoffvalue = 0.1)
+
+
 }
 \keyword{outliers}

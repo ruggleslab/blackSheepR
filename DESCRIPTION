@@ -1,7 +1,7 @@
 Package: blacksheepr
 Type: Package
 Title: Outlier Analysis for pairwise differential comparison
-Version: 0.99.6
+Version: 0.99.7
 Authors@R: c(person("MacIntosh", "Cornwell", 
     email="macintosh.cornwell@nyulangone.org", 	role = c("aut")), 
 	person("RugglesLab", email = "ruggleslab@gmail.com", role = "cre"))
@@ -13,7 +13,6 @@ Description: Blacksheep is a tool designed for outlier analysis in the context
     populations within the table to compare.
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
 Imports:

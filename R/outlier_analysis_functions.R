@@ -18,8 +18,9 @@
 #' @import stats
 #' @export
 #' @examples
-#' data("sample_annotations")
-#' new_comparisons = make_comparison_columns(sample_annotations[,1,drop=FALSE])
+#' data("sample_annotationdata")
+#' new_comparisons = make_comparison_columns(
+#'     sample_annotationdata[,1,drop=FALSE])
 make_comparison_columns <- function(intable){
     ## Create empty outtablelist
     outtablelist = list()
@@ -66,8 +67,8 @@ make_comparison_columns <- function(intable){
 #' @import stats
 #' @export
 #' @examples
-#' data("sample_annotations")
-#' groupings = comparison_groupings(sample_annotations)
+#' data("sample_annotationdata")
+#' groupings = comparison_groupings(sample_annotationdata)
 comparison_groupings <- function(comptable) {
     ## Initate blank list
     groupings = list()
@@ -128,8 +129,8 @@ comparison_groupings <- function(comptable) {
 #' @keywords outliers
 #' @export
 #' @examples
-#' data("sample_values")
-#' reftable_function_out = make_outlier_table(sample_values,
+#' data("sample_phosphodata")
+#' reftable_function_out = make_outlier_table(sample_phosphodata,
 #'     analyze_negative_outliers = TRUE)
 #' outliertab = reftable_function_out$outliertab
 #' upperboundtab = reftable_function_out$upperboundtab
@@ -263,12 +264,12 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
 #' @export
 #' @examples
 #'
-#' data("sample_values")
-#' reftable_function_out = make_outlier_table(sample_values)
+#' data("sample_phosphodata")
+#' reftable_function_out = make_outlier_table(sample_phosphodata)
 #' outliertab = reftable_function_out$outliertab
 #'
-#' data("sample_annotations")
-#' groupings = comparison_groupings(sample_annotations)
+#' data("sample_annotationdata")
+#' groupings = comparison_groupings(sample_annotationdata)
 #'
 #' count_outliers_out = count_outliers(groupings, outliertab,
 #'     aggregate_features = FALSE)
@@ -401,13 +402,13 @@ count_outliers <- function(groupings, outliertab,
 #' @export
 #' @examples
 #'
-#' data("sample_values")
-#' head(sample_values)
-#' reftable_function_out = make_outlier_table(sample_values)
+#' data("sample_phosphodata")
+#' head(sample_phosphodata)
+#' reftable_function_out = make_outlier_table(sample_phosphodata)
 #' outliertab = reftable_function_out$outliertab
 #'
-#' data("sample_annotations")
-#' groupings = comparison_groupings(sample_annotations)
+#' data("sample_annotationdata")
+#' groupings = comparison_groupings(sample_annotationdata)
 #'
 #' count_outliers_out = count_outliers(groupings, outliertab,
 #'     aggregate_features = FALSE)
@@ -623,8 +624,7 @@ outlier_analysis <- function(grouptablist,
 #'     fisher exact test to get the p.value for the difference in outlier count
 #'     for each feature in each of your comparisons
 #' @usage outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
-#'     counttab, metatable, fdrcutoffvalue = 0.1,
-#'     write_out_plot = FALSE, outfilepath = getwd())
+#'     counttab, metatable, fdrcutoffvalue = 0.1)
 #' @param outlier_analysis_out the full outlier_analysis data objet
 #' @param analysis_num DEFAULT: NULL; if you only want to plot the heatmap for
 #'     a particular analysis, enter number of that analysis
@@ -632,21 +632,18 @@ outlier_analysis <- function(grouptablist,
 #' @param metatable the complete metatable that was used to generate the
 #'     comparisons, will be used for annotation of the heatmap
 #' @param fdrcutoffvalue DEFAULT: 0.1; The FDR value for significance
-#' @param write_out_plot DEFAULT: FALSE; write out the plot to <outfilepath>
-#' @param outfilepath the full string path to where the file should output to,
-#'     DEFAULT is current working directory
 #' @return outputs a pdf with the heatmap in the current working directory
 #' @keywords outliers
 #' @import ComplexHeatmap RColorBrewer circlize
 #' @export
 #' @examples
 #'
-#' data("sample_values")
-#' reftable_function_out = make_outlier_table(sample_values)
+#' data("sample_phosphodata")
+#' reftable_function_out = make_outlier_table(sample_phosphodata)
 #' outliertab = reftable_function_out$outliertab
 #'
-#' data("sample_annotations")
-#' groupings = comparison_groupings(sample_annotations)
+#' data("sample_annotationdata")
+#' groupings = comparison_groupings(sample_annotationdata)
 #'
 #' count_outliers_out = count_outliers(groupings, outliertab,
 #'     aggregate_features = FALSE)
@@ -656,14 +653,13 @@ outlier_analysis <- function(grouptablist,
 #' outlier_analysis_out = outlier_analysis(grouptablist,
 #'     fraction_table = fractiontab)
 #'
-#' metatable = sample_annotations
-#' counttab = sample_values
+#' metatable = sample_annotationdata
+#' counttab = sample_phosphodata
 #'
 #' hm1 = outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
 #'     fractiontab, metatable, fdrcutoffvalue = 0.1)
 outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
-                            metatable, fdrcutoffvalue = 0.1,
-                            write_out_plot = FALSE, outfilepath = getwd()) {
+                            metatable, fdrcutoffvalue = 0.1) {
     ## Pull out the comparison columns from the metadata
     #compcols = colnames(metatable)[grep("comp_", colnames(metatable))]
 
@@ -689,14 +685,10 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
                                         rownames(metatable), drop=FALSE]
 
             annotation1 = annotationlist_builder(metatable)
-            outfile1 = paste(outfilepath, "outlieranalysis_heatmap_for_",
-                names(outlier_analysis_out)[analysiscount], ".pdf", sep="")
             hm1 = create_heatmap(counttab = subsetcounttab,
                 colmetatable = metatable, colannotationlist = annotation1,
                 colclusterparam = FALSE, rowclusterparam = FALSE,
-                write_out_plot = write_out_plot,
-                nameparam = names(outlier_analysis_out)[analysiscount],
-                pdfoutfile = outfile1)
+                nameparam = names(outlier_analysis_out)[analysiscount])
             #return(hm1)
             heatmaplist[analysiscount] = list(hm1)
             names(heatmaplist)[analysiscount] = paste0("print_",
@@ -715,8 +707,7 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 #' Run the entire blacksheep Function from Start to finish
 #' @usage deva(se, analyze_negative_outliers = FALSE,
 #'     aggregate_features = FALSE, feature_delineator = "\\\\.",
-#'     fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.01,
-#'     write_out = FALSE, outfilepath = getwd())
+#'     fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.01)
 #' @param se The SummarizedExperiment object containing the countdata and the
 #'     associated annotation data with comparisons in the colData object.
 #' @param analyze_negative_outliers DEFAULT: FALSE; Toggle the analysis of
@@ -737,9 +728,6 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 #'     considered. ex) 10 samples in ingroup - 3 need to have an outlier for
 #'     feature to be considered significant
 #' @param fdrcutoffvalue DEFAULT: 0.1; The FDR value for significance
-#' @param write_out DEFAULT: FALSE; write out tables and plots
-#' @param outfilepath the full string path to where the file should output to,
-#'     DEFAULT is current working directory
 #' @return outputs a pdf with the heatmap in the current working directory
 #' @keywords outliers
 #' @import ComplexHeatmap RColorBrewer circlize
@@ -747,21 +735,23 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 #' @export
 #' @examples
 #'
-#' library(SummarizedExperiment)
-#' data("sample_values")
-#' data("sample_annotations")
+#' suppressPackageStartupMessages(library(SummarizedExperiment))
+#' data("sample_phosphodata")
+#' data("sample_annotationdata")
 #'
-#' se = SummarizedExperiment(assays = list(counts = as.matrix(sample_values)),
-#'     colData = DataFrame(sample_annotations))
+#' se = SummarizedExperiment(
+#'     assays = list(counts = as.matrix(sample_phosphodata)),
+#'     colData = DataFrame(sample_annotationdata))
 #'
 #' deva(se = se,
-#'     analyze_negative_outliers = TRUE, aggregate_features = TRUE,
-#'     feature_delineator = "\\.", fdrcutoffvalue = 0.1, write_out = FALSE,
-#'     outfilepath = getwd())
+#'     analyze_negative_outliers = FALSE, aggregate_features = TRUE,
+#'     feature_delineator = "-", fraction_samples_cutoff = 0.3,
+#'     fdrcutoffvalue = 0.1)
+#'
+#'
 deva <- function(se, analyze_negative_outliers = FALSE,
                         aggregate_features = FALSE, feature_delineator = "\\.",
-                        fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.01,
-                        write_out = FALSE, outfilepath = getwd()) {
+                        fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.01) {
 
     ## Extracting information from the SummarizedExperiment
     counttable = assays(se)[[1]]
@@ -789,13 +779,11 @@ deva <- function(se, analyze_negative_outliers = FALSE,
 
         pos_outlier_analysis_out = outlier_analysis(
             grouptablist = posgrouptablist,
-            fraction_table = posfractiontab, fraction_samples_cutoff = 0.3,
-            write_out_tables = write_out, outfilepath = outfilepath)
+            fraction_table = posfractiontab, fraction_samples_cutoff = 0.3)
 
         hm1 = outlier_heatmap(outlier_analysis_out = pos_outlier_analysis_out,
                         analysis_num = NULL, counttab = posfractiontab,
-                        metatable = metatable, fdrcutoffvalue = fdrcutoffvalue,
-                        write_out_plot = write_out, outfilepath = outfilepath)
+                        metatable = metatable, fdrcutoffvalue = fdrcutoffvalue)
 
         ## Expanded out Code to for loop to sort the metatable for each comp
         hm1list = list()
@@ -806,8 +794,7 @@ deva <- function(se, analyze_negative_outliers = FALSE,
             hm1list[[i]] = outlier_heatmap(
                 outlier_analysis_out = pos_outlier_analysis_out,
                 analysis_num = i, counttab = posfractiontab,
-                metatable = plottable, fdrcutoffvalue = fdrcutoffvalue,
-                write_out_plot = write_out, outfilepath = outfilepath)
+                metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
         }
         hm1 = unlist(hm1list)
 
@@ -820,8 +807,7 @@ deva <- function(se, analyze_negative_outliers = FALSE,
 
             neg_outlier_analysis_out = outlier_analysis(
                 grouptablist = neggrouptablist,
-                fraction_table = negfractiontab, fraction_samples_cutoff = 0.3,
-                write_out_tables = write_out, outfilepath = outfilepath)
+                fraction_table = negfractiontab, fraction_samples_cutoff = 0.3)
 
             ## Expanded out Code to for loop to sort the metatable for each comp
             hm2list = list()
@@ -832,8 +818,7 @@ deva <- function(se, analyze_negative_outliers = FALSE,
                 hm2list[[i]] = outlier_heatmap(
                     outlier_analysis_out = neg_outlier_analysis_out,
                     analysis_num = i, counttab = negfractiontab,
-                    metatable = plottable, fdrcutoffvalue = fdrcutoffvalue,
-                    write_out_plot = write_out, outfilepath = outfilepath)
+                    metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
             }
             hm2 = unlist(hm2list)
         }
@@ -859,8 +844,7 @@ deva <- function(se, analyze_negative_outliers = FALSE,
         pos_outlier_analysis_out = outlier_analysis(
             grouptablist = posgrouptablist,
             fraction_table = posfractiontab,
-            fraction_samples_cutoff = fraction_samples_cutoff,
-            write_out_tables = write_out, outfilepath = outfilepath)
+            fraction_samples_cutoff = fraction_samples_cutoff)
 
         ## Expanded out Code to for loop to sort the metatable for each comp
         hm1list = list()
@@ -871,8 +855,7 @@ deva <- function(se, analyze_negative_outliers = FALSE,
             hm1list[[i]] = outlier_heatmap(
                 outlier_analysis_out = pos_outlier_analysis_out,
                 analysis_num = i, counttab = posfractiontab,
-                metatable = plottable, fdrcutoffvalue = fdrcutoffvalue,
-                write_out_plot = write_out, outfilepath = outfilepath)
+                metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
         }
         hm1 = unlist(hm1list)
 
@@ -886,8 +869,7 @@ deva <- function(se, analyze_negative_outliers = FALSE,
             neg_outlier_analysis_out = outlier_analysis(
                 grouptablist = neggrouptablist,
                 fraction_table = negfractiontab,
-                fraction_samples_cutoff = fraction_samples_cutoff,
-                write_out_tables = write_out, outfilepath = outfilepath)
+                fraction_samples_cutoff = fraction_samples_cutoff)
 
             ## Expanded out Code to for loop to sort the metatable for each comp
             hm2list = list()
@@ -898,8 +880,7 @@ deva <- function(se, analyze_negative_outliers = FALSE,
                 hm2list[[i]] = outlier_heatmap(
                     outlier_analysis_out = neg_outlier_analysis_out,
                     analysis_num = i, counttab = negfractiontab,
-                    metatable = plottable, fdrcutoffvalue = fdrcutoffvalue,
-                    write_out_plot = write_out, outfilepath = outfilepath)
+                    metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
             }
             hm2 = unlist(hm2list)
         }
@@ -916,4 +897,64 @@ deva <- function(se, analyze_negative_outliers = FALSE,
     }
 
 }
+
+## HELPER FUNCTIONS:
+
+## Deva Results Summary
+#' Utility function that allows easier grabbing of data
+#'
+#' @param deva_out output from the deva function
+#' @param ID The keyword to search through analyses and grab desired output
+#' @param type <"table" | "heatmap"> the analysis type desired
+#' @return desired subset of analysis from deva
+#' @keywords outliers
+#' @export
+#' @examples
+#'
+#' suppressPackageStartupMessages(library(SummarizedExperiment))
+#' data("sample_phosphodata")
+#' data("sample_annotationdata")
+#'
+#' se = SummarizedExperiment(
+#'     assays = list(counts = as.matrix(sample_phosphodata)),
+#'     colData = DataFrame(sample_annotationdata))
+#'
+#' deva_out = deva(se = se,
+#'     analyze_negative_outliers = FALSE, aggregate_features = TRUE,
+#'     feature_delineator = "-", fraction_samples_cutoff = 0.3,
+#'     fdrcutoffvalue = 0.1)
+#'
+#' deva_results(deva_out, ID = "outlieranalysis", type = "table")
+
+deva_results <- function(deva_out, ID = NULL, type = NULL) {
+    # If just deva_out is input - return names of analyses performed
+    if ((is.null(ID))) {
+        if(is.null(type)){
+            out1 = names(deva_out[[1]])
+        } else {
+            if(type == "table"){out1 = names(deva_out[[1]])}
+            if(type == "heatmap"){out1 = names(deva_out[[2]])}
+        }
+    } else {
+        ## Determine whether outputting the table or heatmap
+        if(is.null(type)) {stop("Please input data type to output
+                                <\"table\" | \"heatmap\">")}
+        if(type == "table"){datacat = 1}
+        if(type == "heatmap"){datacat = 2}
+
+        grab = grep(pattern = ID, names(deva_out[[datacat]]))
+
+        if (length(grab) == 1) {out1 = deva_out[[datacat]][[grab]]}
+        if (length(grab) == 0) {stop(paste0("No analyses have name with", ID,
+                        " Please check output names <deva_results(deva_out)>"))}
+        if (length(grab) > 1) {
+            warning(paste0("Multiple analyses matched ", ID,
+                            ", outputting named list of selected analyses"))
+            out1 = deva_out[[datacat]][grab]
+        }
+    }
+
+    return(out1)
+}
+
 

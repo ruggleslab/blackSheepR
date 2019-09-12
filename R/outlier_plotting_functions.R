@@ -9,34 +9,29 @@
 #' @usage create_heatmap(counttab = counttab,
 #'     colmetatable = NULL, colannotationlist = NULL,
 #'     colclusterparam = FALSE, rowclusterparam = FALSE,
-#'     nameparam, write_out_plot = FALSE, pdfoutfile = pdfoutfile)
+#'     nameparam)
 #' @param counttab table with counts, samples -x-axis, features -y-axis
 #' @param colmetatable the metatable containing information for the columns
 #' @param colannotationlist annotation table for columns, based off colmetatable
 #' @param colclusterparam cluster the columns?
 #' @param rowclusterparam cluster the rows?
 #' @param nameparam the title on the heatmap
-#' @param write_out_plot DEFAULT: FALSE write out the plot to <pdfoutfile>
-#' @param pdfoutfile the full path to the pdf to write out to
 #' @return prints a pdf heatmap out to the designated outpath
 #' @keywords outliers
 #' @import stats grid grDevices ComplexHeatmap circlize
 #' @export
 #' @examples
-#' data("sample_values")
-#' counttab = sample_values
-#' pdfoutfile = paste(getwd(), "/heatmap_out.pdf", sep = "")
+#' data("sample_phosphodata")
+#' counttab = sample_phosphodata
 #' nameparam = "testplot"
 #'
 #' create_heatmap(counttab = counttab,
 #'     colmetatable = NULL,
 #'     colannotationlist = NULL,colclusterparam = FALSE,
-#'     rowclusterparam = FALSE, nameparam, write_out_plot = FALSE,
-#'     pdfoutfile= pdfoutfile)
+#'     rowclusterparam = FALSE, nameparam)
 create_heatmap <- function(counttab = counttab,
     colmetatable = NULL, colannotationlist = NULL, colclusterparam = FALSE,
-    rowclusterparam = FALSE, nameparam, write_out_plot = FALSE,
-    pdfoutfile = pdfoutfile) {
+    rowclusterparam = FALSE, nameparam) {
 
     ## Calc. spearman correlation and use values for column clustering
     if (colclusterparam != FALSE) {
@@ -140,10 +135,9 @@ create_heatmap <- function(counttab = counttab,
     )
 
     ## Plot out the heatmap
-    if (write_out_plot == TRUE) {pdf(file = pdfoutfile, width=11,height=8.5)}
-    outplot = draw(ht1, annotation_legend_side = "bottom",
-                    padding = unit(c(5, 20, 5, 5), "mm"))
-    if (write_out_plot == TRUE) {junk <- dev.off()}
+    # outplot = draw(ht1, annotation_legend_side = "bottom",
+    #                 padding = unit(c(5, 20, 5, 5), "mm"))
+    outplot = ht1
     return(outplot)
 
 }

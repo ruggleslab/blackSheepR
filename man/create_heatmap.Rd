@@ -7,7 +7,7 @@
 create_heatmap(counttab = counttab,
     colmetatable = NULL, colannotationlist = NULL,
     colclusterparam = FALSE, rowclusterparam = FALSE,
-    nameparam, write_out_plot = FALSE, pdfoutfile = pdfoutfile)
+    nameparam)
 }
 \arguments{
 \item{counttab}{table with counts, samples -x-axis, features -y-axis}
@@ -21,10 +21,6 @@ create_heatmap(counttab = counttab,
 \item{rowclusterparam}{cluster the rows?}
 
 \item{nameparam}{the title on the heatmap}
-
-\item{write_out_plot}{DEFAULT: FALSE write out the plot to <pdfoutfile>}
-
-\item{pdfoutfile}{the full path to the pdf to write out to}
 }
 \value{
 prints a pdf heatmap out to the designated outpath
@@ -33,15 +29,13 @@ prints a pdf heatmap out to the designated outpath
 Plot out a heatmap
 }
 \examples{
-data("sample_values")
-counttab = sample_values
-pdfoutfile = paste(getwd(), "/heatmap_out.pdf", sep = "")
+data("sample_phosphodata")
+counttab = sample_phosphodata
 nameparam = "testplot"
 
 create_heatmap(counttab = counttab,
     colmetatable = NULL,
     colannotationlist = NULL,colclusterparam = FALSE,
-    rowclusterparam = FALSE, nameparam, write_out_plot = FALSE,
-    pdfoutfile= pdfoutfile)
+    rowclusterparam = FALSE, nameparam)
 }
 \keyword{outliers}

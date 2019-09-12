@@ -1,5 +1,5 @@
 ---
-title: "Outlier Analysis using blacksheepr - Phosphoprotein"
+title: "Outlier Analysis using blacksheepr"
 author: "MacIntosh Cornwell"
 date: "`r format(Sys.Date(), '%m/%d/%Y')`"
 package: blacksheepr
@@ -31,12 +31,13 @@ blacksheep is a project that was developed in an effort to refine this analysis
 to a functional tool for outlier analysis in the context of biological data. 
 This data can take many forms: protein, phosphoprotein, RNA, CNA, etc. The input
 for blacksheep is count data of some form, and annotation data indicative of the
-populations for comparison.
+populations for comparison. The primary function call is `deva` (Differential 
+Extreme Value Analysis).
 This vignette will run through a few standard use-cases, illustrating the 
 functionality of blacksheep and hopefully answering questions and showing its 
 usefulness in biological exploration.
 
-## Installation:
+## Installation
 Installation is similar to all Bioconductor packages. Start R and run the 
 following lines to install:
 ```{r install package, eval=FALSE}
@@ -51,17 +52,16 @@ library(blacksheepr)
 ```
 
 ## Input Data
-##### 1 - Count data
+### Count data
 Count data should be a table of counts with samples along the x-axis, and 
 features along the y-axis, with the labels being rownames and colnames.
 
 ```{r countdata example}
-library(blacksheepr)
-data("sample_values")
-sample_values[1:5,1:5]
+data("sample_phosphodata")
+sample_phosphodata[1:5,1:5]
 ```
 
-##### 2 - Annotation data
+### Annotation data
 The Annotation data should be a table with the same samples included in your 
 count data, listed along the y-axis. Each column will then be a comparison to 
 perform, with the values of the column being some form of binary system 
@@ -69,9 +69,18 @@ indicating the samples belonging to each sub group.
 NOTE - that these should be strings. It's more informative if your columns 
 actually contain useful information such as "high"/"low", "mutant"/"WT", etc.
 ```{r annotation example}
-data("sample_annotations")
-sample_annotations[1:5,1:5]
+data("sample_annotationdata")
+sample_annotationdata[1:5,]
 ```
+
+### SummarizedExperiment data
+blacksheepr takes in a SummarizedExperiment object into the main `deva` 
+function call (more on this below). blacksheepr can therefore start with any 
+SummarizedExperiment object, as long as the colData of the SummarizedExperiment 
+contains rownames that are the same as the column names in the data as 
+described above, and the metadata is made up of BINARY classifications. NOTE 
+that this may take some additional formatting. The Appendix has a note on 
+helper functions that can assist with this formatting.
 
 
 # Example Workflow - Phosphoprotein
@@ -79,61 +88,18 @@ In the following section - we will go through an example of using outlier
 analysis using Phosphoprotein data. The inputted data is being supplied from 
 [Github](https://github.com/ruggleslab/blacksheep_supp/tree/master) and is from 
 breast cancer data from TCGA and CPTAC.
-NOTE - that this analysis is more complicated then RNA due to the additional 
-functionality of aggregating together multiple phospho sites per protein. More 
-on this later.
+[doi:10.1038/nature18003](https://www.nature.com/articles/nature18003)
 
+## Input Data
 ### Read in Annotation
-Read in the Annotation table. We will also define a variable
-`outfilepath` which is used in a number of functions as a location to save data 
-out to. This will currently be set to the working directory - but the user can 
-set this to their desired location.
+Read in the Annotation table.
 ```{r read in data - phospho, echo = TRUE}
-library(curl)
-annotationtable = read.table(curl(paste0("https://raw.githubusercontent.com/",
-                    "ruggleslab/blacksheep_supp/dev/vignettes/brca/",
-                    "annotations_common_samples.csv")), header = TRUE,
-                    row.names = 1, na.strings = c("", " ", "NA"), sep = ",",
-                    check.names = FALSE, stringsAsFactors = FALSE)
-colnames(annotationtable) = gsub(" ", "_", colnames(annotationtable))
-compcols = annotationtable[,c("PAM50", "ER_Status", "PR_Status",
-                        "GATA3_Mutation", "PIK3CA_Mutation", "TP53_Mutation")]
-
-outfilepath = getwd()
-
-compcols[1:5,1:5]
-dim(compcols)
-
+data(sample_annotationdata)
+comptable = sample_annotationdata
+comptable[1:5,]
+dim(comptable)
 ```
 
-#### Formatting our annotation data
-Before we continue, we are going to format our annotation data to be ready for
-further analysis. The driving concept behind this work is to have a PAIRWISE 
-analysis, so we are going to format our data into readable pairwise information.
-
-First - we are going to manually make a few edits to change our columns into 
-binary metrics - "mutant" and "none"
-
-``` {r format annotation data1 - phospho, echo=FALSE} 
-## FORMAT our annotation table
-compcols[,"GATA3_Mutation"] = ifelse(is.na(compcols[,4]), "None", "Mutant")
-compcols[,"PIK3CA_Mutation"] = ifelse(is.na(compcols[,5]), "None", "Mutant")
-compcols[,"TP53_Mutation"] = ifelse(is.na(compcols[,6]), "None", "Mutant")
-head(compcols)
-```
-
-#### Using the make_comparison_columns utility function
-Then we are going to use a built in utility function `make_comparison_columns` 
-to help turn a multifactor column into several binary columns
-
-``` {r format annotation data2 - phospho}
-## Use the make_comparison_columns function to create binary columns
-expanded_compcols = make_comparison_columns(compcols[,1,drop=FALSE])
-## Append new columns to the comparison annotation table
-comptable = cbind.data.frame(expanded_compcols, compcols[2:ncol(compcols)],
-                            stringsAsFactors = FALSE)
-head(comptable)
-```
 
 ### Read in the phospho data
 Next we need to have the actual count data that we are analyzing. Note that 
@@ -142,11 +108,8 @@ subfeatures - phosphorylation sites. This aspect of the data will directly
 relate to later analysis, as blacksheep will AGGREGATE on this data and 
 collapse the data onto the primary feature. More on this later.
 ```{r}
-phosphotable = read.table(curl(paste0("https://raw.githubusercontent.com/",
-                    "ruggleslab/blacksheep_supp/dev/vignettes/brca/",
-                    "phospho_common_samples_data.csv")), header = TRUE,
-                    row.names = 1, sep = ",", quote = "", check.names = FALSE)
-
+data(sample_phosphodata)
+phosphotable = sample_phosphodata
 phosphotable[1:5,1:5]
 dim(phosphotable)
 ```
@@ -168,23 +131,40 @@ blacksheep_SE = SummarizedExperiment(
 blacksheep_SE
 ```
 
-### Running blacksheep
-The blacksheep function has a number of steps to it that are individually 
+## Running deva
+The deva function has a number of steps to it that are individually 
 described below. Note though that the individual steps only need to be used for 
-specific query or alteration. In the general case, the `blacksheep` function on 
+specific query or alteration. In the general case, the `deva` function on 
 its own should be sufficient for the desired analysis.
 ```{r deva, fig.keep="none"}
 deva_out = deva(se = blacksheep_SE, 
     analyze_negative_outliers = FALSE, aggregate_features = TRUE, 
     feature_delineator = "-", fraction_samples_cutoff = 0.3, 
-    fdrcutoffvalue = 0.1, write_out = FALSE)
+    fdrcutoffvalue = 0.1)
 ```
 
-The output from blacksheep are lists with the desired results. The number of 
-lists depends on the parameters. Their is an `outlier_analysis` and a 
-`significant_heatmaps` for the positive outliers (2 total) and for negative 
-outliers (2 more) if the parameter is turned on. In this example, we only ran 
-analysis for positive outliers. So the output will be 2 items long.
+### deva parameters
+* se - The SummarizedExperiment that will serve as the input for deva
+* analyze_negative_outliers - Is the analysis looking at positive or negative 
+outliers.
+* aggregate_features - Should the analysis collapse features to a primary term. 
+Useful for phosphosites on proteins, isotypes of proteins, etc.
+* feature_delineator - The character marker that delineates the primary feature 
+when useing the <aggregate_features> parameter
+* fraction_samples_cutoff - how many samples in a group must contain an outlier 
+for the feature to be considered significant. This parameter is used to avoid 
+overbiased results from single samples. (see appendix)
+* fdrcutoffvalue - the FDR value to be considered for significant output.
+
+## Exploring deva output
+The output from blacksheep are lists with the desired results. There is an 
+`outlier_analysis` and a `significant_heatmaps` for the desired analysis. In 
+this example, we only ran analysis for positive outliers. So the output will 
+be 2 items long - heatmaps and tables for the positive outlier analysis.
+
+```{r}
+names(deva_out)
+```
 
 The `outlier_analysis` is a nested list of analyses - with one anaysis per 
 comparison columns
@@ -192,50 +172,82 @@ comparison columns
 names(deva_out$pos_outlier_analysis)
 ```
 
-Each of these entries is a table of analysis - which can be accessed directly 
-for further analysis, or writing out.
-```{r}
-head(deva_out$pos_outlier_analysis$
-    outlieranalysis_for_PAM50_Her2__Her2_vs_PAM50_Her2__not_Her2)
-```
-
-The heatmaps serve as a snapshot of the significant genes that met the 
-parameterized fdr cutoff in the `blacksheep` function can. They can be accessed 
-in a similar manner to the analysis tables. NOTE though that there will only be 
-a heatmap if there were ANY significant genes. If there were no genes that met 
-the fdr cut off - then there will be no heatmap generated
+The `significant_heatmaps` section is a nested list of heatmap obejcts, again
+with one anaysis per comparison columns
 ```{r}
 names(deva_out$significant_pos_heatmaps)
 ```
 
-The heatmap objects themselves are `ComplexHeatmap` objects - and will be drawn 
-when called - which will output in the default Rplot, in the plot window of 
-Rstudio, or can be called in the context of a pdf file to output the plot
 
+### The deva_results() function
+`deva_results()` is a utility function to help explore your data. If you use 
+`deva_results` on the `deva_out` object, it will return a list of the performed 
+analyses that returned significant results.
 ```{r}
-deva_out$significant_pos_heatmaps$
-    print_outlieranalysis_for_PAM50_Her2__Her2_vs_PAM50_Her2__not_Her2
+deva_results(deva_out)
+```
 
+The other parameters for deva_out are `ID` and `type`. `ID` is a keyword to 
+grab the desired analysis. `type` is either `table` or `heatmap` and specifies 
+which analysis type that you want to grab.
+```{r}
+subanalysis_Her2 = deva_results(deva_out, ID = "Her2", type = "table")
+head(subanalysis_Her2)
+```
+
+### Results
+For each column of your comparison table that you put in (occupies `colData` in 
+a SummarizedExperiment object), `deva` will output a table of analysis if there 
+were any applicable results. 
+One example of a table is as follows:
+```{r}
+subanalysis_Her2 = deva_results(deva_out, ID = "Her2", type = "table")
+head(subanalysis_Her2)
+```
+The output in order is:
+* col1 - the list of genes
+* col2-3 - the pvalue of the gene being significantly different, the column it 
+appears in is indicative of the measure of the gene being higher in group1 or 
+group2.
+* col4-5 - the FDR value for that pvalue
+* col6-9 - the raw data behind the statisical test, showing how many outliers 
+and nonoutliers there are for each group.
+
+The heatmaps serve as a snapshot of the significant genes that met the 
+parameterized fdr cutoff in the `deva` function call. They can be accessed 
+in a similar manner to the analysis tables. NOTE though that there will only be 
+a heatmap if there were ANY significant genes. If there were no genes that met 
+the fdr cut off - then there will be no heatmap generated.
+```{r}
+subanalysis_Her2_HM = deva_results(deva_out, ID = "Her2", type = "heatmap")
+subanalysis_Her2_HM
+```
+
+The heatmap objects themselves are [ComplexHeatmap](https://
+www.bioconductor.org/packages/release/bioc/html/ComplexHeatmap.html)
+objects - and will be drawn when called, either in the default Rplot, or can be 
+saved out to an external file.
+
+```{r, eval = FALSE}
 ## NOT RUN
 ## To output separately to pdf
-#pdf(outfile.pdf)
-#deva_out$significant_pos_heatmaps$
-#    print_outlieranalysis_for_PAM50_Basal__not_Basal_vs_PAM50_Basal__Basal
-#dev.off()
+pdf("outfile.pdf")
+draw(subanalysis_Her2_HM)
+dev.off()
 ```
 
 
 
 
-# Piecewise analysis - PHOSPHO
-THIS SECTION ASSUMES THAT THE PREVIOUS STEPS FOR READING IN THE DATA AND 
-ANNOTATIONS HAS BEEN COMPLETED.
-The next section demonstrates the individual steps of blacksheep. NOTE that the 
-user may never need to call the specific steps, but if specific tweaks are 
+# Piecewise analysis
+*THIS SECTION ASSUMES THAT THE PREVIOUS STEPS FOR READING IN THE DATA AND 
+ANNOTATIONS HAS BEEN COMPLETED*
+The next section demonstrates the individual steps of deva. NOTE that the 
+user may *never* need to call the specific steps, but if specific tweaks are 
 needed, or if an intermediate step needs to be extracted, then this workflow 
 can be followed to see how the analysis is generated.
 
-### Create groupings
+## Create groupings
 Create the subgroups based on your metadata. Note that the 
 `comparison_groupings` function creates groups by going through the comparison 
 columns, and creating the first subgroup for all of the comparisons, and then 
@@ -249,7 +261,7 @@ groupings = comparison_groupings(comptable)
 lapply(groupings, head)[1:5]
 ```
 
-### Make Outlier table
+## Make Outlier table
 The next function `make_outlier_table` will take in the countdata and output a 
 table that has been converted to show outliers. A value of 0 means that it was 
 not an outlier, 1 means it was an outlier in the positive direction, and if the 
@@ -276,7 +288,7 @@ sampmedtab = reftable_function_out$sampmedtab
 outliertab[1:5,1:5]
 ```
 
-### Tabulate Outliers
+## Tabulate Outliers
 For each of our groups, run through the outlier table and count up the total 
 number of outliers and nonoutliers. For phospho (And this example) we are going 
 to use the AGGREGATION FUNCTION to aggregate our counts together on a per 
@@ -326,7 +338,7 @@ Example of what the samples are that went into the analysis:
 grouptablist$PAM50_Her2__Her2$samples
 ```
 
-#### Run Outlier Analysis
+## Run Outlier Analysis
 With the tabulated tables, run the outlier analysis to look for enrichment of 
 outliers between groups. NOTE that this function has a functionality built in 
 to write out tables to the external file, we will not use this parameter now, 
@@ -353,7 +365,7 @@ head(outlier_analysis_out$
         outlieranalysis_for_PAM50_Her2__Her2_vs_PAM50_Her2__not_Her2)
 ```
 
-#### Plot Results using Heatmap Generating Function
+## Plot Results using Heatmap Generating Function
 After you have your results, its useful to have a snapshot of your results in a 
 figure. blacksheepr includes a utility function to output a heatmap with custom 
 annotations and data. Use the plotting function with the original annotation 
@@ -385,8 +397,41 @@ hm1$print_outlieranalysis_for_PAM50_Her2__Her2_vs_PAM50_Her2__not_Her2
 
 
 
+# Appendix
+## Formatting your annotations table
+Formatting your annotation table is a crucial step to making sure blacksheepr 
+runs smoothly. The key points are that that the rownames of your annotations 
+EXACTLY match the column names of the assay data, and that the annotation 
+columns are BINARY and therefore have only 2 subcategories per column.
 
+### Using the make_comparison_columns utility function
+There is a built in utility function `make_comparison_columns` to help turn a 
+multifactor column into several binary columns. The user can input as many 
+columns as they want, and the function will output a table with each 
+multifactorial column turned into a number of binary columns
 
+``` {r format annotation data2 - phospho}
+dummyannotations = data.frame(comp1 = c(1,1,2,2,3,3), 
+                    comp2 = c("red", "blue", "red", "blue", "green", "green"), 
+                    row.names = paste0("sample", seq_len(6)))
+dummyannotations
+## Use the make_comparison_columns function to create binary columns
+expanded_dummyannotations = make_comparison_columns(dummyannotations)
+expanded_dummyannotations
+```
+
+## Running blacksheep functions for other -omics data
+blacksheepr is built as a generalized suite of tools with algorithms for use 
+with any type of -omics data in the format of the previously described assay 
+and annotations. Along those lines there are a couple common practices for 
+other -omics data types.
+
+### Running deva with RNAseq data
+The principles are the same, the only main difference is that you will not 
+aggregate on to a primary feature, so the `aggregate_features` parameter should 
+be left to the default `FALSE`. Also Note that if you want to output all genes 
+regardless of significance, this can be accomplished by setting the `FDRcutoff` 
+to 1, and the `fraction_value_cutoff` to 0.
 
 
 
