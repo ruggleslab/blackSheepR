@@ -130,26 +130,13 @@ comparison_groupings <- function(comptable) {
 #' @export
 #' @examples
 #' data("sample_phosphodata")
-#' reftable_function_out = make_outlier_table(sample_phosphodata,
-#'     analyze_negative_outliers = TRUE)
+#' reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,],
+#'     analyze_negative_outliers = FALSE)
 #' outliertab = reftable_function_out$outliertab
 #' upperboundtab = reftable_function_out$upperboundtab
 #' lowerboundtab = reftable_function_out$lowerboundtab
 #' sampmedtab = reftable_function_out$sampmedtab
 make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
-
-    # ## VECTORIZE THE PROCESS OF MAKING THE REFTABLE
-    # medout = apply(intable, 1, function(x) median(x, na.rm = TRUE))
-    # uppboundout = apply(intable, 1, function(x)
-    #     median(x, na.rm = TRUE) + 1.5*IQR(x, na.rm = TRUE))
-    # lowboundout = apply(intable, 1, function(x)
-    #     median(x, na.rm = TRUE) - 1.5*IQR(x, na.rm = TRUE))
-    #
-    # set_pos_outliers <- function(x) {
-    #     x[x > (median(x, na.rm = TRUE) + 1.5*IQR(x, na.rm = TRUE))] <- 1
-    #     x[x < (median(x, na.rm = TRUE) + 1.5*IQR(x, na.rm = TRUE))] <- 0
-    # }
-    # outliertabout = do.call(rbind, lapply(intable, set_pos_outliers))
 
     ## Define blank out lists
     outlist = uppboundlist = lowboundlist = sampmedlist = list()
@@ -163,7 +150,6 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
         colnames(sampdat) = c(genename, genename)
 
         ## Set upper and lower bounds based off of the IQR and med
-        ## Save upper and lower bound, and med to a list we then tabulate
         sampmedlist[[intablegenecount]] = sampmed =
             median(sampdat[,1],na.rm=TRUE)
         names(sampmedlist)[intablegenecount] = genename
@@ -171,8 +157,7 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
         if (analyze_negative_outliers != TRUE) {
             uppboundlist[[intablegenecount]] = uppbound =
                 sampmed + 1.5*IQR(sampdat[,1], na.rm = TRUE)
-            names(sampmedlist)[intablegenecount] =
-                names(uppboundlist)[intablegenecount] = genename
+            names(uppboundlist)[intablegenecount] = genename
             sampdat[!is.na(sampdat[,1]) & sampdat[,1] > uppbound,2] <- 1
             lowboundlist = NULL
         } else {
@@ -183,33 +168,13 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
             uppboundlist = NULL
         }
 
-
-        ## Create a categ and assign high, low, none status given the boundaries
-        # sampdat$categ = 0
-        # sampdat[is.na(sampdat[,1]),2] <- NA
-        # sampdat[!is.na(sampdat[,1]) & sampdat[,1] > uppbound,2] <- 1
-        # colnames(sampdat) = c(genename, genename)
-
-        ## Return negative information if param is TRUE
-        # if (analyze_negative_outliers == TRUE) {
-        #     # lowboundlist[[intablegenecount]] = lowbound =
-        #     #     sampmed - 1.5*IQR(sampdat[,1], na.rm = TRUE)
-        #     # names(lowboundlist)[intablegenecount] = genename
-        #     # sampdat[!is.na(sampdat[,1]) & sampdat[,1] < lowbound,2] <- -1
-        #     } else { lowboundlist = NULL}
-
         ## Save what we just made - which is n by 2 table with the gene in one
         ## col and the status of the sample in the other
         outlist[[intablegenecount]] = sampdat[,2, drop=FALSE]
 
     }
     ## Combine all of our lists
-    # outliertab - the master table that tells whether each gene is significant
-    # compared to the rest of the data set, upbound, downbound, sampmean - each
-    # lists that have the upper boundary/lower boundary of signifigance/med for
-    # the gene across all samples
     outliertab = as.data.frame(t(do.call(cbind, outlist)))
-    # upperboundtab = do.call(rbind, uppboundlist)
     if (analyze_negative_outliers == TRUE) {
         negativeoutlierlist = list(lowerboundtab = do.call(rbind, lowboundlist))
         positiveoutlierlist = NULL
@@ -217,14 +182,8 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
         negativeoutlierlist = NULL
         positiveoutlierlist = list(upperboundtab = do.call(rbind, uppboundlist))
     }
-    # lowerboundtab = do.call(rbind, lowboundlist)
     sampmedtab = do.call(rbind, sampmedlist)
 
-    # if (analyze_negative_outliers == TRUE) {
-    #     negativeoutlierlist = list(lowerboundtab = lowerboundtab)
-    # } else {
-    #     negativeoutlierlist = NULL
-    # }
     output = c(list(
                 outliertab = outliertab,
                 sampmedtab = sampmedtab),
@@ -232,11 +191,6 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
                 negativeoutlierlist)
 
     ## Return the outputted values
-    # outliertab where the intable has been turned into a reference table of
-    # whether or not the gene is sig high, low, or none
-    # upperboundtab - upperbound of signifigance for each of the genes
-    # lowerboundtab - lowerbound of signifigance for each of the genes
-    # sampmeantab - the average value for each of the genes
     return(output)
 }
 
@@ -265,7 +219,7 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
 #' @examples
 #'
 #' data("sample_phosphodata")
-#' reftable_function_out = make_outlier_table(sample_phosphodata)
+#' reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
 #' outliertab = reftable_function_out$outliertab
 #'
 #' data("sample_annotationdata")
@@ -281,13 +235,12 @@ count_outliers <- function(groupings, outliertab,
     ## Define empty starting list
     grouptablist = list()
     ## Set factor depending on analysis - positive or negative
-    #outliervalue = ifelse(analyze_negative_outliers == TRUE, -1, 1)
-
     ## AUTOMATICALLY DETECT OUTLIER VALUE
     outliervalue = unique(unlist(outliertab))[unique(unlist(outliertab)) != 0 &
                                     !is.na(unique(unlist(outliertab)))]
-    ## AUTOMATICALLY DETECT OUTLIER VALUE
 
+    ## If aggregate is true, split on delineator, and output an outlier and
+    ## nonoutlier aggregate table
     if (aggregate_features == TRUE) {
         feature_labels = do.call(rbind, strsplit(sub(feature_delineator,
                                 "xyz", rownames(outliertab)), split = "xyz"))
@@ -313,7 +266,7 @@ count_outliers <- function(groupings, outliertab,
         fractiontab = data.frame(fractiontab[,-1],
                         row.names=fractiontab[,1], check.names = FALSE)
     } else {
-        #if (analyze_negative_outliers == FALSE) {
+        ## If no aggregation, then the fractiontab is the same as the outliertab
         if (outliervalue == 1) {
             fractiontab = outliertab
         } else {
@@ -403,8 +356,7 @@ count_outliers <- function(groupings, outliertab,
 #' @examples
 #'
 #' data("sample_phosphodata")
-#' head(sample_phosphodata)
-#' reftable_function_out = make_outlier_table(sample_phosphodata)
+#' reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
 #' outliertab = reftable_function_out$outliertab
 #'
 #' data("sample_annotationdata")
@@ -547,29 +499,6 @@ outlier_analysis <- function(grouptablist,
         colnames(fdrvals) = gsub(pattern = "pval", replacement = "fdr",
                                 colnames(fdrvals))
 
-
-    # ## Add in FDR values for the pvalue metrics
-    # if (nrow(fishout) > 1) {
-    #     ## APPLY FDR in UP and DOWN direction separately
-    #     fdrgp1 = fishout[rownames(fishout) %in% group1prop_filter_features,]
-    #     fdrvals1 = apply(fdrgp1, 2, function(x) p.adjust(x, method = "BH"))
-    #     fdrgp2 = fishout[rownames(fishout) %in% group2prop_filter_features,]
-    #     fdrvals2 = apply(fdrgp2, 2, function(x) p.adjust(x, method = "BH"))
-    #     fdrvals = rbind(fdrvals1, fdrvals2)
-    #
-    #     colnames(fdrvals) = gsub(pattern = "pval", replacement = "fdr",
-    #                              colnames(fdrvals))
-    # } else {
-    #     if (nrow(fishout) == 1){
-    #         fdrvals = data.frame(as.list(p.adjust(fishout, method = "BH")),
-    #                             row.names = rownames(fishout))
-    #         colnames(fdrvals) = gsub(pattern = "pval", replacement = "fdr",
-    #                                  colnames(fishout))
-    #     } else {
-    #         next
-    #     }
-    # }
-
         ## SAVE OUT DATA
         if ("1" %in% colnames(group1tab)) {
             colnames(group1tab) = paste(group1label, "_",
@@ -639,7 +568,7 @@ outlier_analysis <- function(grouptablist,
 #' @examples
 #'
 #' data("sample_phosphodata")
-#' reftable_function_out = make_outlier_table(sample_phosphodata)
+#' reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
 #' outliertab = reftable_function_out$outliertab
 #'
 #' data("sample_annotationdata")
@@ -660,9 +589,6 @@ outlier_analysis <- function(grouptablist,
 #'     fractiontab, metatable, fdrcutoffvalue = 0.1)
 outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
                             metatable, fdrcutoffvalue = 0.1) {
-    ## Pull out the comparison columns from the metadata
-    #compcols = colnames(metatable)[grep("comp_", colnames(metatable))]
-
     ## Define the start and stops of the foorloop - if they put in a single
     ## analysis to do - it will only output that, otherwise, will loop over all
     startcount = ifelse(is.null(analysis_num), 1, analysis_num)
@@ -697,7 +623,7 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
             #print(paste("No Significant Outliers for ",
             #names(outlier_analysis_out)[analysiscount],
             #" at an FDR cut off value of ", fdrcutoffvalue, sep = ""))
-            }
+        }
     }
     return(Filter(Negate(is.null), heatmaplist))
 }
@@ -740,7 +666,7 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 #' data("sample_annotationdata")
 #'
 #' se = SummarizedExperiment(
-#'     assays = list(counts = as.matrix(sample_phosphodata)),
+#'     assays = list(counts = as.matrix(sample_phosphodata[1:1000,])),
 #'     colData = DataFrame(sample_annotationdata))
 #'
 #' deva(se = se,
@@ -916,7 +842,7 @@ deva <- function(se, analyze_negative_outliers = FALSE,
 #' data("sample_annotationdata")
 #'
 #' se = SummarizedExperiment(
-#'     assays = list(counts = as.matrix(sample_phosphodata)),
+#'     assays = list(counts = as.matrix(sample_phosphodata[1:1000,])),
 #'     colData = DataFrame(sample_annotationdata))
 #'
 #' deva_out = deva(se = se,

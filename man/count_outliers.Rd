@@ -39,7 +39,7 @@ If aggregating then you will have to turn the parameter on, but you still
 \examples{
 
 data("sample_phosphodata")
-reftable_function_out = make_outlier_table(sample_phosphodata)
+reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
 outliertab = reftable_function_out$outliertab
 
 data("sample_annotationdata")
