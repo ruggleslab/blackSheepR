@@ -1,3 +1,10 @@
+Changes in version 0.99.9 (2019-09-30)
++ Major rewrite to functionalize outlier_analysis and reduce redundant code
++ Fixed Reviewer suggestions
+  o changed assigner symbol
+  o renamed vignette
+  o changed getwd() -> tempdir()
+
 Changes in version 0.99.7 (2019-09-10)
 + Submitted to Bioconductor
 + Fixed Reviewer suggestions

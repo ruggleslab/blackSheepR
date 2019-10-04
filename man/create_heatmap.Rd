@@ -30,8 +30,8 @@ Plot out a heatmap
 }
 \examples{
 data("sample_phosphodata")
-counttab = sample_phosphodata
-nameparam = "testplot"
+counttab <- sample_phosphodata
+nameparam <- "testplot"
 
 create_heatmap(counttab = counttab,
     colmetatable = NULL,

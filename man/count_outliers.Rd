@@ -39,15 +39,15 @@ If aggregating then you will have to turn the parameter on, but you still
 \examples{
 
 data("sample_phosphodata")
-reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
-outliertab = reftable_function_out$outliertab
+reftable_function_out <- make_outlier_table(sample_phosphodata[1:1000,])
+outliertab <- reftable_function_out$outliertab
 
 data("sample_annotationdata")
-groupings = comparison_groupings(sample_annotationdata)
+groupings <- comparison_groupings(sample_annotationdata)
 
-count_outliers_out = count_outliers(groupings, outliertab,
+count_outliers_out <- count_outliers(groupings, outliertab,
     aggregate_features = FALSE)
-grouptablist = count_outliers_out$grouptablist
-fractiontab = count_outliers_out$fractiontab
+grouptablist <- count_outliers_out$grouptablist
+fractiontab <- count_outliers_out$fractiontab
 }
 \keyword{outliers}

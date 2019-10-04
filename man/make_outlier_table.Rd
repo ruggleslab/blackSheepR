@@ -37,11 +37,11 @@ for your reference.
 }
 \examples{
 data("sample_phosphodata")
-reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,],
+reftable_function_out <- make_outlier_table(sample_phosphodata[1:1000,],
     analyze_negative_outliers = FALSE)
-outliertab = reftable_function_out$outliertab
-upperboundtab = reftable_function_out$upperboundtab
-lowerboundtab = reftable_function_out$lowerboundtab
-sampmedtab = reftable_function_out$sampmedtab
+outliertab <- reftable_function_out$outliertab
+upperboundtab <- reftable_function_out$upperboundtab
+lowerboundtab <- reftable_function_out$lowerboundtab
+sampmedtab <- reftable_function_out$sampmedtab
 }
 \keyword{outliers}

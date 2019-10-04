@@ -19,23 +19,23 @@
 #' @export
 #' @examples
 #' data("sample_annotationdata")
-#' new_comparisons = make_comparison_columns(
+#' new_comparisons <- make_comparison_columns(
 #'     sample_annotationdata[,1,drop=FALSE])
 make_comparison_columns <- function(intable){
     ## Create empty outtablelist
-    outtablelist = list()
+    outtablelist <- list()
     ## Run through each inputted column
     for (i in seq_len(ncol(intable))) {
         ## Pull out the rownames and column names to save for later
-        featurenames = rownames(intable)
-        categoryname = colnames(intable)[i]
+        featurenames <- rownames(intable)
+        categoryname <- colnames(intable)[i]
 
         ## Select the column we are working with
-        subtable = intable[,i, drop=FALSE]
-        subtable = apply(subtable, 2, as.character)
+        subtable <- intable[,i, drop=FALSE]
+        subtable <- apply(subtable, 2, as.character)
 
         ## Create duplicate columns - one for each subcategory
-        new_comp_tab = matrix(rep(subtable, length(unique(subtable[,1]))),
+        new_comp_tab <- matrix(rep(subtable, length(unique(subtable[,1]))),
                     nrow = nrow(intable), ncol = length(unique(subtable[,1])),
                     dimnames = list(featurenames, unique(subtable[,1])))
 
@@ -47,12 +47,12 @@ make_comparison_columns <- function(intable){
         }
 
         ## Add back the column name, and then save out
-        colnames(new_comp_tab) = paste0(categoryname, "_",
+        colnames(new_comp_tab) <- paste0(categoryname, "_",
                                         colnames(new_comp_tab))
-        outtablelist[[i]] = new_comp_tab
+        outtablelist[[i]] <- new_comp_tab
 
     }
-    output = do.call(cbind, outtablelist)
+    output <- do.call(cbind, outtablelist)
     return(output)
 }
 
@@ -68,32 +68,32 @@ make_comparison_columns <- function(intable){
 #' @export
 #' @examples
 #' data("sample_annotationdata")
-#' groupings = comparison_groupings(sample_annotationdata)
+#' groupings <- comparison_groupings(sample_annotationdata)
 comparison_groupings <- function(comptable) {
     ## Initate blank list
-    groupings = list()
+    groupings <- list()
 
     ## FAILSAFE - to insure that these are charactors not factors
-    comptable = data.frame(comptable)
-    samplenames = rownames(comptable)
-    comptable = data.frame(lapply(comptable,as.character),
+    comptable <- data.frame(comptable)
+    samplenames <- rownames(comptable)
+    comptable <- data.frame(lapply(comptable,as.character),
                                 stringsAsFactors = FALSE)
-    rownames(comptable) = samplenames
+    rownames(comptable) <- samplenames
     for (i in seq_len(ncol(comptable))) {
         # Select column and create comparison based off entries in column
-        subsamp = comptable[,i, drop=FALSE]
+        subsamp <- comptable[,i, drop=FALSE]
         subsamp[subsamp == ""] <- NA ## Failsafe to turn blank cells into NA
-        subcats = unique(na.omit(subsamp[,1]))
+        subcats <- unique(na.omit(subsamp[,1]))
 
         ## Fill the i'th entry in list with samples that fall into subcategory
-        groupings[[i]] = rownames(na.omit(subsamp[subsamp == subcats[1],,
+        groupings[[i]] <- rownames(na.omit(subsamp[subsamp == subcats[1],,
                                                 drop=FALSE]))
-        names(groupings)[i] = paste0(colnames(subsamp), "__", subcats[1])
+        names(groupings)[i] <- paste0(colnames(subsamp), "__", subcats[1])
 
         ## fill the i+num comps entry with samples in that subcategory
-        groupings[[i+ncol(comptable)]] = rownames(na.omit(
+        groupings[[i+ncol(comptable)]] <- rownames(na.omit(
             subsamp[subsamp == subcats[2],,drop=FALSE]))
-        names(groupings)[i+ncol(comptable)] = paste0(
+        names(groupings)[i+ncol(comptable)] <- paste0(
             colnames(subsamp), "__", subcats[2])
         ## Continue this through - this order enables a 2col matrix with these
         ## entries next to each other ex) 1,4;2,5;3,6 for 3 comps
@@ -130,57 +130,59 @@ comparison_groupings <- function(comptable) {
 #' @export
 #' @examples
 #' data("sample_phosphodata")
-#' reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,],
+#' reftable_function_out <- make_outlier_table(sample_phosphodata[1:1000,],
 #'     analyze_negative_outliers = FALSE)
-#' outliertab = reftable_function_out$outliertab
-#' upperboundtab = reftable_function_out$upperboundtab
-#' lowerboundtab = reftable_function_out$lowerboundtab
-#' sampmedtab = reftable_function_out$sampmedtab
+#' outliertab <- reftable_function_out$outliertab
+#' upperboundtab <- reftable_function_out$upperboundtab
+#' lowerboundtab <- reftable_function_out$lowerboundtab
+#' sampmedtab <- reftable_function_out$sampmedtab
 make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
 
     ## Define blank out lists
-    outlist = uppboundlist = lowboundlist = sampmedlist = list()
+    outlist <- uppboundlist <- lowboundlist <- sampmedlist <- list()
     for (intablegenecount in seq_len(nrow(intable))) {
 
         ## Save the sampname, then subset the table to just the one gene
-        genename = rownames(intable)[intablegenecount]
-        sampdat = as.data.frame(t(intable[intablegenecount, , drop=FALSE]))
-        sampdat$categ = 0
+        genename <- rownames(intable)[intablegenecount]
+        sampdat <- as.data.frame(t(intable[intablegenecount, , drop=FALSE]))
+        sampdat$categ <- 0
         sampdat[is.na(sampdat[,1]),2] <- NA
-        colnames(sampdat) = c(genename, genename)
+        colnames(sampdat) <- c(genename, genename)
 
         ## Set upper and lower bounds based off of the IQR and med
-        sampmedlist[[intablegenecount]] = sampmed =
+        sampmedlist[[intablegenecount]] <- sampmed <-
             median(sampdat[,1],na.rm=TRUE)
-        names(sampmedlist)[intablegenecount] = genename
+        names(sampmedlist)[intablegenecount] <- genename
 
         if (analyze_negative_outliers != TRUE) {
-            uppboundlist[[intablegenecount]] = uppbound =
+            uppboundlist[[intablegenecount]] <- uppbound <-
                 sampmed + 1.5*IQR(sampdat[,1], na.rm = TRUE)
-            names(uppboundlist)[intablegenecount] = genename
+            names(uppboundlist)[intablegenecount] <- genename
             sampdat[!is.na(sampdat[,1]) & sampdat[,1] > uppbound,2] <- 1
-            lowboundlist = NULL
+            lowboundlist <- NULL
         } else {
-            lowboundlist[[intablegenecount]] = lowbound =
+            lowboundlist[[intablegenecount]] <- lowbound <-
                 sampmed - 1.5*IQR(sampdat[,1], na.rm = TRUE)
-            names(lowboundlist)[intablegenecount] = genename
+            names(lowboundlist)[intablegenecount] <- genename
             sampdat[!is.na(sampdat[,1]) & sampdat[,1] < lowbound,2] <- -1
-            uppboundlist = NULL
+            uppboundlist <- NULL
         }
 
         ## Save what we just made - which is n by 2 table with the gene in one
         ## col and the status of the sample in the other
-        outlist[[intablegenecount]] = sampdat[,2, drop=FALSE]
+        outlist[[intablegenecount]] <- sampdat[,2, drop=FALSE]
 
     }
     ## Combine all of our lists
     outliertab = as.data.frame(t(do.call(cbind, outlist)))
     if (analyze_negative_outliers == TRUE) {
-        negativeoutlierlist = list(lowerboundtab = do.call(rbind, lowboundlist))
-        positiveoutlierlist = NULL
+        negativeoutlierlist <- list(lowerboundtab =
+                                        do.call(rbind, lowboundlist))
+        positiveoutlierlist <- NULL
     } else {
-        negativeoutlierlist = NULL
-        positiveoutlierlist = list(upperboundtab = do.call(rbind, uppboundlist))
+        negativeoutlierlist <- NULL
+        positiveoutlierlist <- list(upperboundtab =
+                                        do.call(rbind, uppboundlist))
     }
     sampmedtab = do.call(rbind, sampmedlist)
 
@@ -219,106 +221,105 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
 #' @examples
 #'
 #' data("sample_phosphodata")
-#' reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
-#' outliertab = reftable_function_out$outliertab
+#' reftable_function_out <- make_outlier_table(sample_phosphodata[1:1000,])
+#' outliertab <- reftable_function_out$outliertab
 #'
 #' data("sample_annotationdata")
-#' groupings = comparison_groupings(sample_annotationdata)
+#' groupings <- comparison_groupings(sample_annotationdata)
 #'
-#' count_outliers_out = count_outliers(groupings, outliertab,
+#' count_outliers_out <- count_outliers(groupings, outliertab,
 #'     aggregate_features = FALSE)
-#' grouptablist = count_outliers_out$grouptablist
-#' fractiontab = count_outliers_out$fractiontab
+#' grouptablist <- count_outliers_out$grouptablist
+#' fractiontab <- count_outliers_out$fractiontab
 count_outliers <- function(groupings, outliertab,
     aggregate_features = FALSE, feature_delineator = "\\.") {
 
     ## Define empty starting list
-    grouptablist = list()
-    ## Set factor depending on analysis - positive or negative
-    ## AUTOMATICALLY DETECT OUTLIER VALUE
-    outliervalue = unique(unlist(outliertab))[unique(unlist(outliertab)) != 0 &
+    grouptablist <- list()
+    ## Set factor depending on analysis - pos/neg - detected automatically
+    outliervalue <- unique(unlist(outliertab))[unique(unlist(outliertab)) != 0 &
                                     !is.na(unique(unlist(outliertab)))]
 
     ## If aggregate is true, split on delineator, and output an outlier and
     ## nonoutlier aggregate table
     if (aggregate_features == TRUE) {
-        feature_labels = do.call(rbind, strsplit(sub(feature_delineator,
+        feature_labels <- do.call(rbind, strsplit(sub(feature_delineator,
                                 "xyz", rownames(outliertab)), split = "xyz"))
-        colnames(feature_labels) = c("primary_feature", "secondary_feature")
-        aggtabin = cbind(feature_labels, outliertab)
+        colnames(feature_labels) <- c("primary_feature", "secondary_feature")
+        aggtabin <- cbind(feature_labels, outliertab)
 
-        aggoutliertab = aggregate(aggtabin[,c(3:ncol(aggtabin))],
+        aggoutliertab <- aggregate(aggtabin[,c(3:ncol(aggtabin))],
                     by = list(primary_feature = aggtabin[,"primary_feature"]),
                     function(x) sum(x==outliervalue, na.rm = TRUE))
-        aggoutliertab = data.frame(aggoutliertab[,-1],
+        aggoutliertab <- data.frame(aggoutliertab[,-1],
                             row.names = aggoutliertab[,1], check.names = FALSE)
 
-        aggnonoutliertab = aggregate(aggtabin[,c(3:ncol(aggtabin))],
+        aggnonoutliertab <- aggregate(aggtabin[,c(3:ncol(aggtabin))],
                     by = list(primary_feature = aggtabin[,"primary_feature"]),
                     function(x) sum(x!=outliervalue, na.rm = TRUE))
-        aggnonoutliertab = data.frame(aggnonoutliertab[,-1],
+        aggnonoutliertab <- data.frame(aggnonoutliertab[,-1],
                         row.names = aggnonoutliertab[,1], check.names = FALSE)
 
         ## Create fraction table in similar manner
-        fractiontab = aggregate(aggtabin[,c(3:ncol(aggtabin))],
+        fractiontab <- aggregate(aggtabin[,c(3:ncol(aggtabin))],
             by = list(primary_feature = aggtabin[,"primary_feature"]),
                 function(x) sum(x[x==outliervalue],na.rm = TRUE)/sum(!is.na(x)))
-        fractiontab = data.frame(fractiontab[,-1],
+        fractiontab <- data.frame(fractiontab[,-1],
                         row.names=fractiontab[,1], check.names = FALSE)
     } else {
         ## If no aggregation, then the fractiontab is the same as the outliertab
         if (outliervalue == 1) {
-            fractiontab = outliertab
+            fractiontab <- outliertab
         } else {
-            fractiontab = -outliertab
+            fractiontab <- -outliertab
         }
     }
 
     ## Perform counting in desired direction
     for (groupcount in seq_len(length(groupings))) {
-        subgroup = outliertab[,colnames(outliertab) %in%
+        subgroup <- outliertab[,colnames(outliertab) %in%
                                         groupings[[groupcount]], drop=FALSE]
         if (aggregate_features == FALSE) {
-            grouptablist[[groupcount]] = list()
-            grouptablist[[groupcount]][[1]] = t(apply(subgroup,MARGIN=1,
+            grouptablist[[groupcount]] <- list()
+            grouptablist[[groupcount]][[1]] <- t(apply(subgroup,MARGIN=1,
                         function(x) table(factor(x, levels=c(0,outliervalue)))))
-            grouptablist[[groupcount]][[2]] = groupings[[groupcount]]
-            names(grouptablist[[groupcount]]) = c("feature_counts", "samples")
+            grouptablist[[groupcount]][[2]] <- groupings[[groupcount]]
+            names(grouptablist[[groupcount]]) <- c("feature_counts", "samples")
 
         } else {
-            aggoutliercount = cbind.data.frame(
+            aggoutliercount <- cbind.data.frame(
                 primary_feature = rownames(aggoutliertab),
                 outlier_count = rowSums(
                                 aggoutliertab[,groupings[[groupcount]]]))
 
-            aggnonoutliercount = cbind.data.frame(
+            aggnonoutliercount <- cbind.data.frame(
                 primary_feature = rownames(aggnonoutliertab),
                 outlier_count = rowSums(
                                 aggnonoutliertab[,groupings[[groupcount]]]))
 
-            aggcounttab = merge(aggnonoutliercount, aggoutliercount,
+            aggcounttab <- merge(aggnonoutliercount, aggoutliercount,
                                 by = "primary_feature")
-            rownames(aggcounttab) = aggcounttab[,1]
-            colnames(aggcounttab) = c("primary_feature", 0, outliervalue)
+            rownames(aggcounttab) <- aggcounttab[,1]
+            colnames(aggcounttab) <- c("primary_feature", 0, outliervalue)
 
             ## Save out the table to the first entry in the sublist
-            grouptablist[[groupcount]] = list()
-            grouptablist[[groupcount]][[1]] = aggcounttab[,c(2,3)]
+            grouptablist[[groupcount]] <- list()
+            grouptablist[[groupcount]][[1]] <- aggcounttab[,c(2,3)]
 
             ## Also saving the samples as an additional entry in the sublist
-            grouptablist[[groupcount]][[2]] = groupings[[groupcount]]
-            names(grouptablist[[groupcount]]) = c("feature_counts", "samples")
+            grouptablist[[groupcount]][[2]] <- groupings[[groupcount]]
+            names(grouptablist[[groupcount]]) <- c("feature_counts", "samples")
 
         }
-        names(grouptablist)[groupcount] = names(groupings)[groupcount]
+        names(grouptablist)[groupcount] <- names(groupings)[groupcount]
     }
     ## Define our output with different lists depending on input params
     if (aggregate_features == TRUE){
-        aggregateoutlist = list(aggoutliertab = aggoutliertab)
+        aggregateoutlist <- list(aggoutliertab = aggoutliertab)
     } else {
-        aggregateoutlist = NULL
+        aggregateoutlist <- NULL
     }
-    output = c(list(grouptablist = grouptablist, fractiontab = fractiontab),
+    output <- c(list(grouptablist = grouptablist, fractiontab = fractiontab),
                     aggregateoutlist)
     return(output)
 }
@@ -331,7 +332,7 @@ count_outliers <- function(groupings, outliertab,
 #'     for each feature in each of your comparisons
 #' @usage outlier_analysis(grouptablist, fraction_table = NULL,
 #'     fraction_samples_cutoff = 0.3,
-#'     write_out_tables = FALSE, outfilepath = getwd())
+#'     write_out_tables = FALSE, outfilepath = tempdir())
 #' @param grouptablist table generated by the count_outliers function. NOTE that
 #'     the inputted grouptablist will be deciphered to determine its content.
 #'     This means that user decides to input the outliertab or aggregate tab,
@@ -348,7 +349,7 @@ count_outliers <- function(groupings, outliertab,
 #'     each of the analyses to a separate table to whereever <outfilepath> is
 #'     specfied.
 #' @param outfilepath the full string path to where the file should output to,
-#'     DEFAULT is current working directory
+#'     DEFAULT is a tempdir()
 #' @return the analysis table with p.value, fdr, and raw data per comparison
 #' @keywords outliers
 #' @import stats utils
@@ -356,190 +357,158 @@ count_outliers <- function(groupings, outliertab,
 #' @examples
 #'
 #' data("sample_phosphodata")
-#' reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
-#' outliertab = reftable_function_out$outliertab
+#' reftable_function_out <- make_outlier_table(sample_phosphodata[1:1000,])
+#' outliertab <- reftable_function_out$outliertab
 #'
 #' data("sample_annotationdata")
-#' groupings = comparison_groupings(sample_annotationdata)
+#' groupings <- comparison_groupings(sample_annotationdata)
 #'
-#' count_outliers_out = count_outliers(groupings, outliertab,
+#' count_outliers_out <- count_outliers(groupings, outliertab,
 #'     aggregate_features = FALSE)
-#' grouptablist = count_outliers_out$grouptablist
-#' fractiontab = count_outliers_out$fractiontab
+#' grouptablist <- count_outliers_out$grouptablist
+#' fractiontab <- count_outliers_out$fractiontab
 #'
-#' outlier_analysis_out = outlier_analysis(grouptablist,
+#' outlier_analysis_out <- outlier_analysis(grouptablist,
 #'     fraction_table = fractiontab)
 outlier_analysis <- function(grouptablist,
                         fraction_table = NULL, fraction_samples_cutoff = 0.3,
-                        write_out_tables = FALSE, outfilepath = getwd()) {
+                        write_out_tables = FALSE, outfilepath = tempdir()) {
     ## Define blank starting lists
-    outtablelist = list()
+    outtablelist <- list()
     ## Create comparison matrix
-    groupcombos = matrix(names(grouptablist),
+    groupcombos <- matrix(names(grouptablist),
                         nrow=(length(grouptablist)/2), ncol = 2)
     for (groupcombonum in seq_len(nrow(groupcombos))) {
         ## Pull out the two groups of interest for the run
-        group1label = groupcombos[groupcombonum,1]
-        group2label = groupcombos[groupcombonum,2]
-        group1tab = as.data.frame(grouptablist[[group1label]][[1]])
-        group2tab = as.data.frame(grouptablist[[group2label]][[1]])
-        group1samps = grouptablist[[group1label]][[2]]
-        group2samps = grouptablist[[group2label]][[2]]
-
-        ## Run the function - but we want to run it 4 ways. Are there more pos
-        ## outliers in A than B, are there more neg outliers in A than B, are
-        ## there more pos outliers in B than A, are there more neg outliers in
-        ## B than A
+        group1label <- groupcombos[groupcombonum,1]
+        group2label <- groupcombos[groupcombonum,2]
+        group1tab <- as.data.frame(grouptablist[[group1label]][[1]])
+        group2tab <- as.data.frame(grouptablist[[group2label]][[1]])
+        group1samps <- grouptablist[[group1label]][[2]]
+        group2samps <- grouptablist[[group2label]][[2]]
 
         ## Vectorized split_and_fish - extracting pval for each comparison
-        comptab1 = merge(group2tab, group1tab, by = "row.names")
-        comptab1a = data.frame(comptab1, row.names = comptab1[,1])[,2:5]
-        comptab2 = merge(group1tab, group2tab, by = "row.names")
-        comptab2a = data.frame(comptab2, row.names = comptab2[,1])[,2:5]
+        comptabtemp <- merge(group2tab, group1tab, by = "row.names")
+        comptab <- data.frame(comptabtemp, row.names = comptabtemp[,1])[,2:5]
 
         split_and_fish <- function(combined_grouptab, sidedness){
-            sigval = ifelse(sidedness=="up", 1, -1)
-            conttab = matrix(unlist(combined_grouptab), nrow = 2, ncol = 2,
+            sigval <- ifelse(sidedness=="pos", 1, -1)
+            conttab <- matrix(unlist(combined_grouptab), nrow = 2, ncol = 2,
                         dimnames = list(c("0", sigval), c("group1","group2")))
-
             return(fisher.test(conttab, alternative = "two.sided")$p.value)
         }
 
-        if ("1" %in% colnames(group1tab)) {
-            upstatgroup1 = upstatgroup2 =
-                apply(comptab1a, 1, split_and_fish, sidedness = "up")
-        } else { upstatgroup1 = upstatgroup2 = NULL }
+        sidedparam <- ifelse("1" %in% colnames(group1tab), "pos", "neg")
+        statgroup <- apply(comptab, 1, split_and_fish, sidedness = sidedparam)
 
-        if ("-1" %in% colnames(group1tab)) {
-            downstatgroup1 = downstatgroup2 =
-                apply(comptab1a, 1, split_and_fish, sidedness = "down")
-        } else { downstatgroup1 = downstatgroup2 = NULL }
-
-        fishout = cbind(upstatgroup1, upstatgroup2,
-                        downstatgroup1, downstatgroup2)
-
-        if (ncol(fishout) == 4) {colnames(fishout) = c(
-            paste0("pval_more_pos_outliers_in_",
-                    groupcombos[groupcombonum,c(1,2)]),
-            paste0("pval_more_neg_outliers_in_",
-                    groupcombos[groupcombonum,c(1,2)]))
-        } else {
-            if ("1" %in% colnames(group1tab)) {
-                colnames(fishout)[c(1,2)] =
-                    paste0("pval_more_pos_outliers_in_",
-                            groupcombos[groupcombonum,c(1,2)])
-            } else {colnames(fishout)[c(1,2)] =
-                paste0("pval_more_neg_outliers_in_",
-                        groupcombos[groupcombonum,c(1,2)]) }
-        }
+        fishout <- cbind(statgroup, statgroup)
+        colnames(fishout)[c(1,2)] <- paste0("pval_more_", sidedparam,
+                            "_outliers_in_", groupcombos[groupcombonum,c(1,2)])
 
         #### RAW NUMBER FILTER
         ## Filter to only select features that already have a proportion of
         ## outliers greater in the ingroup
-        group1prop_filter = (group1tab[,2]/(group1tab[,1] + group1tab[,2])) >
-            (group2tab[,2]/(group2tab[,1] + group2tab[,2]))
-        group2prop_filter = (group2tab[,2]/(group2tab[,1] + group2tab[,2])) >
-            (group1tab[,2]/(group1tab[,1] + group1tab[,2]))
-        group1prop_filter[is.na(group1prop_filter)] <- FALSE
-        group2prop_filter[is.na(group2prop_filter)] <- FALSE
+        filter_features <- function(group1tab, group2tab) {
+            ## Apply the raw number filter to group1 > 2
+            groupprop_filter <- (
+                group1tab[,2] / (group1tab[,1] + group1tab[,2])) >
+                (group2tab[,2] / (group2tab[,1] + group2tab[,2]))
+            groupprop_filter[is.na(groupprop_filter)] <- FALSE
+            ## Return a list of genes that pass the raw number filter
+            groupprop_filter_features <- rownames(group1tab[groupprop_filter,])
+            return(groupprop_filter_features)
+        }
 
-        ## Done separately so that if fraction table is incorporated,
-        ## filters can be applied twice
-        group1prop_filter_features = rownames(group1tab[group1prop_filter,])
-        group2prop_filter_features = rownames(group2tab[group2prop_filter,])
+        group1prop_filter_features <- filter_features(group1tab, group2tab)
+        group2prop_filter_features <- filter_features(group2tab, group1tab)
+        prop_filter_features <- union(group1prop_filter_features,
+                                    group2prop_filter_features)
 
-        fishout = fishout[rownames(fishout) %in% union(
-            group1prop_filter_features, group2prop_filter_features),,drop=FALSE]
-
-        ## Fraction table filter
+        ## If we are applying the fraction table, then apply this filter too
         if (!is.null(fraction_table)){
-            group1fractab = fraction_table[,group1samps]
-            group1fractab_select = group1fractab[rowSums(
-                group1fractab!=0, na.rm = TRUE)/ncol(group1fractab) >
-                    fraction_samples_cutoff,]
-            group1fractab_select2 = group1fractab_select[
-                rownames(group1fractab_select) %in% group1prop_filter_features,]
+            fraction_filter <- function(fraction_table, groupsamps,
+                                        fraction_samples_cutoff,
+                                        groupprop_filter_features) {
+                ## apply filter fraction
+                groupfractab <- fraction_table[,groupsamps]
+                groupfractab_select <- groupfractab[rowSums(
+                    groupfractab!=0, na.rm = TRUE)/ncol(groupfractab) >
+                        fraction_samples_cutoff,]
+                return(rownames(groupfractab_select))
+            }
+            group1fractab_features <- fraction_filter(fraction_table,
+                                group1samps, fraction_samples_cutoff,
+                                group1prop_filter_features)
 
-            group2fractab = fraction_table[,group2samps]
-            group2fractab_select = group2fractab[rowSums(
-                group2fractab!=0, na.rm = TRUE)/ncol(group2fractab) >
-                    fraction_samples_cutoff,]
-            group2fractab_select2 = group2fractab_select[
-                rownames(group2fractab_select) %in% group2prop_filter_features,]
+            group2fractab_features <- fraction_filter(fraction_table,
+                                group2samps, fraction_samples_cutoff,
+                                group2prop_filter_features)
 
-            fraction_selected_genes = union(rownames(group1fractab_select2),
-                                            rownames(group2fractab_select2))
-            fishout = fishout[rownames(fishout) %in% fraction_selected_genes,,
-                            drop=FALSE]
+            fraction_selected_genes <- union(group1fractab_features,
+                                            group2fractab_features)
 
-        } else {fraction_selected_genes = rownames(fishout)}
+        } else {fraction_selected_genes <- rownames(fishout)}
 
-        ## Add in FDR values for the pvalue metrics
-        fish_to_fdr <- function(fishgroup){
-            if (nrow(fishgroup) > 1) {fdrvals = apply(fishgroup, 2, function(x)
-                    p.adjust(x, method = "BH"))
+        fishout <- fishout[rownames(fishout) %in% intersect(
+            fraction_selected_genes, prop_filter_features),,drop=FALSE]
+
+        ## Add in FDR values for the pvalue metrics with failsafes for 1 and 0
+        fish_to_fdr <- function(fishout, groupprop_filter_features){
+            fishgroup <- fishout[rownames(fishout) %in%
+                                    groupprop_filter_features,, drop = FALSE]
+            ## Left in long form to maintain names and labels
+            if (nrow(fishgroup) > 1) {fdrvals <- apply(fishgroup, 2, function(x)
+                p.adjust(x, method = "BH"))
             } else {
                 if(nrow(fishgroup) == 1){
-                    fdrvals = fishgroup
+                    fdrvals <- fishgroup
                 } else {
-                    fdrvals = NULL
+                    fdrvals <- NULL
                 }
             }
             return(fdrvals)
         }
 
-        fdrgp1 = fishout[rownames(fishout) %in% group1prop_filter_features,
-                        , drop = FALSE]
-        fdrvals1 = fish_to_fdr(fdrgp1)
-        fdrgp2 = fishout[rownames(fishout) %in% group2prop_filter_features,
-                        , drop = FALSE]
-        fdrvals2 = fish_to_fdr(fdrgp2)
-        fdrvals = rbind(fdrvals1, fdrvals2)
+        ## Apply the fdr in both directions separately
+        fdrvals1 <- fish_to_fdr(fishout, group1prop_filter_features)
+        fdrvals2 <- fish_to_fdr(fishout, group2prop_filter_features)
+        fdrvals <- rbind(fdrvals1, fdrvals2)
         if (is.null(fdrvals)){next} # break to skip iteration if no sig genes
-        colnames(fdrvals) = gsub(pattern = "pval", replacement = "fdr",
+        colnames(fdrvals) <- gsub(pattern = "pval", replacement = "fdr",
                                 colnames(fdrvals))
 
         ## SAVE OUT DATA
-        if ("1" %in% colnames(group1tab)) {
-            colnames(group1tab) = paste(group1label, "_",
-                                    c("nonposoutlier","posoutlier"), sep="")
-            colnames(group2tab) = paste(group2label, "_",
-                                    c("nonposoutlier","posoutlier"), sep="")
-        } else{
-            colnames(group1tab) = paste(group1label, "_",
-                                    c("nonnegoutlier","negoutlier"), sep="")
-            colnames(group2tab) = paste(group2label, "_",
-                                    c("nonnegoutlier","negoutlier"), sep="")
-        }
+        colnames(group1tab) <- paste0(group1label, "_", paste0(c("non", ""),
+                                                    sidedparam, "outlier"))
+        colnames(group2tab) <- paste0(group2label, "_", paste0(c("non", ""),
+                                                    sidedparam, "outlier"))
 
         ## Write out the final table
-        outtablefin = Reduce(function(dtf1, dtf2) merge(dtf1, dtf2,by = "gene"),
-                        lapply(list(fishout, fdrvals,
-                        group1tab[fraction_selected_genes,],
-                        group2tab[fraction_selected_genes,]),
-                        function(x) data.frame(x, gene = row.names(x))))
+        outtablefin <- Reduce(function(dtf1, dtf2)
+            merge(dtf1, dtf2,by = "gene"), lapply(list(fishout, fdrvals,
+                group1tab[fraction_selected_genes,],
+                group2tab[fraction_selected_genes,]),
+                function(x) data.frame(x, gene = row.names(x))))
 
         ## Format the final table to only have the pvalues for the analysis that
         ## leads to more in ingroup/outgroup
         outtablefin[outtablefin[,7]/(outtablefin[,6] + outtablefin[,7]) >
-                outtablefin[,9]/(outtablefin[,8] + outtablefin[,9]),c(3,5)] = ""
+            outtablefin[,9]/(outtablefin[,8] + outtablefin[,9]),c(3,5)] <- ""
         outtablefin[outtablefin[,7]/(outtablefin[,6] + outtablefin[,7]) <
-                outtablefin[,9]/(outtablefin[,8] + outtablefin[,9]),c(2,4)] = ""
+            outtablefin[,9]/(outtablefin[,8] + outtablefin[,9]),c(2,4)] <- ""
 
         ## Write out the tables
         if (write_out_tables == TRUE) {
-            outlieranalysisoutfile = paste(outfilepath, "outlieranalysis_for_",
-                group1label, "_vs_",
-                group2label, ".csv", sep="")
+            outlieranalysisoutfile <- paste(outfilepath, "outlieranalysis_for_",
+                group1label, "_vs_", group2label, ".csv", sep="")
             write.table(outtablefin, outlieranalysisoutfile, quote = FALSE,
                         sep = ",", row.names = FALSE)
         }
 
         ## Save out results in a list
-        outtablelist[[groupcombonum]] = outtablefin
+        outtablelist[[groupcombonum]] <- outtablefin
         names(outtablelist)[groupcombonum] = paste("outlieranalysis_for_",
-            group1label, "_vs_",
-            group2label, sep="")
+            group1label, "_vs_", group2label, sep="")
     }
     return(Filter(Negate(is.null), outtablelist))
 }
@@ -568,61 +537,57 @@ outlier_analysis <- function(grouptablist,
 #' @examples
 #'
 #' data("sample_phosphodata")
-#' reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
-#' outliertab = reftable_function_out$outliertab
+#' reftable_function_out <- make_outlier_table(sample_phosphodata[1:1000,])
+#' outliertab <- reftable_function_out$outliertab
 #'
 #' data("sample_annotationdata")
-#' groupings = comparison_groupings(sample_annotationdata)
+#' groupings <- comparison_groupings(sample_annotationdata)
 #'
-#' count_outliers_out = count_outliers(groupings, outliertab,
+#' count_outliers_out <- count_outliers(groupings, outliertab,
 #'     aggregate_features = FALSE)
-#' grouptablist = count_outliers_out$grouptablist
-#' fractiontab = count_outliers_out$fractiontab
+#' grouptablist <- count_outliers_out$grouptablist
+#' fractiontab <- count_outliers_out$fractiontab
 #'
-#' outlier_analysis_out = outlier_analysis(grouptablist,
+#' outlier_analysis_out <- outlier_analysis(grouptablist,
 #'     fraction_table = fractiontab)
 #'
-#' metatable = sample_annotationdata
-#' counttab = sample_phosphodata
+#' metatable <- sample_annotationdata
+#' counttab <- sample_phosphodata
 #'
-#' hm1 = outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
+#' hm1 <- outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
 #'     fractiontab, metatable, fdrcutoffvalue = 0.1)
 outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
                             metatable, fdrcutoffvalue = 0.1) {
     ## Define the start and stops of the foorloop - if they put in a single
     ## analysis to do - it will only output that, otherwise, will loop over all
-    startcount = ifelse(is.null(analysis_num), 1, analysis_num)
-    endcount = ifelse(is.null(analysis_num), length(outlier_analysis_out),
+    startcount <- ifelse(is.null(analysis_num), 1, analysis_num)
+    endcount <- ifelse(is.null(analysis_num), length(outlier_analysis_out),
                     analysis_num)
-    heatmaplist = NULL
+    heatmaplist <- NULL
     for (analysiscount in startcount:endcount) {
-        intable = outlier_analysis_out[[analysiscount]]
+        intable <- outlier_analysis_out[[analysiscount]]
 
         ## Select the column from the outlier_analysis_out that contain "fdr"
         ## and then grab rownames for columns that have sig value
-        fdrcols = intable[ ,grepl( "fdr", colnames(intable))]
-        GOI = intable[rowSums(fdrcols < fdrcutoffvalue) == 2,1]
+        fdrcols <- intable[ ,grepl( "fdr", colnames(intable))]
+        GOI <- intable[rowSums(fdrcols < fdrcutoffvalue) == 2,1]
 
         if (length(GOI) > 0) {
             ## Take the metatable, order it by 1s and then 2s on whatever
             ## comparison we are doing, take comparison columns for plotting
             ## Added in as.character as a failsafe
-            subsetcounttab = counttab[as.character(GOI),
+            subsetcounttab <- counttab[as.character(GOI),
                                         rownames(metatable), drop=FALSE]
 
-            annotation1 = annotationlist_builder(metatable)
-            hm1 = create_heatmap(counttab = subsetcounttab,
+            annotation1 <- annotationlist_builder(metatable)
+            hm1 <- create_heatmap(counttab = subsetcounttab,
                 colmetatable = metatable, colannotationlist = annotation1,
                 colclusterparam = FALSE, rowclusterparam = FALSE,
                 nameparam = names(outlier_analysis_out)[analysiscount])
             #return(hm1)
-            heatmaplist[analysiscount] = list(hm1)
-            names(heatmaplist)[analysiscount] = paste0("print_",
+            heatmaplist[analysiscount] <- list(hm1)
+            names(heatmaplist)[analysiscount] <- paste0("print_",
                                 names(outlier_analysis_out)[analysiscount])
-        } else {
-            #print(paste("No Significant Outliers for ",
-            #names(outlier_analysis_out)[analysiscount],
-            #" at an FDR cut off value of ", fdrcutoffvalue, sep = ""))
         }
     }
     return(Filter(Negate(is.null), heatmaplist))
@@ -665,7 +630,7 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 #' data("sample_phosphodata")
 #' data("sample_annotationdata")
 #'
-#' se = SummarizedExperiment(
+#' se <- SummarizedExperiment(
 #'     assays = list(counts = as.matrix(sample_phosphodata[1:1000,])),
 #'     colData = DataFrame(sample_annotationdata))
 #'
@@ -680,73 +645,75 @@ deva <- function(se, analyze_negative_outliers = FALSE,
                         fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.01) {
 
     ## Extracting information from the SummarizedExperiment
-    counttable = assays(se)[[1]]
-    metatable = colData(se)
+    counttable <- assays(se)[[1]]
+    metatable <- colData(se)
 
     ## Use the groupings function to create comparison groups
-    groupings = comparison_groupings(metatable)
+    groupings <- comparison_groupings(metatable)
 
     ## Create the outlier table and other outlier objects
-    reftable_function_out = make_outlier_table(counttable,
+    reftable_function_out <- make_outlier_table(counttable,
                 analyze_negative_outliers = analyze_negative_outliers)
-    outliertab = reftable_function_out$outliertab
-    upperboundtab = reftable_function_out$upperboundtab
-    lowerboundtab = reftable_function_out$lowerboundtab
-    sampmedtab = reftable_function_out$sampmedtab
+    outliertab <- reftable_function_out$outliertab
+    upperboundtab <- reftable_function_out$upperboundtab
+    lowerboundtab <- reftable_function_out$lowerboundtab
+    sampmedtab <- reftable_function_out$sampmedtab
 
     ## If there is no aggregation of features - then just run through normal
     ## analysis, outputting whats parameterized, withoutput as hm and tables
     ## Running through positive and negative side if necessary
     if (aggregate_features == FALSE) {
         ## Positive/nonaggregated workflow
-        pos_count_outliers_out = count_outliers(groupings, outliertab)
-        posgrouptablist = pos_count_outliers_out$grouptablist
-        posfractiontab = pos_count_outliers_out$fractiontab
+        pos_count_outliers_out <- count_outliers(groupings, outliertab)
+        posgrouptablist <- pos_count_outliers_out$grouptablist
+        posfractiontab <- pos_count_outliers_out$fractiontab
 
-        pos_outlier_analysis_out = outlier_analysis(
+        pos_outlier_analysis_out <- outlier_analysis(
             grouptablist = posgrouptablist,
-            fraction_table = posfractiontab, fraction_samples_cutoff = 0.3)
+            fraction_table = posfractiontab,
+            fraction_samples_cutoff = fraction_samples_cutoff)
 
-        hm1 = outlier_heatmap(outlier_analysis_out = pos_outlier_analysis_out,
+        hm1 <- outlier_heatmap(outlier_analysis_out = pos_outlier_analysis_out,
                         analysis_num = NULL, counttab = posfractiontab,
                         metatable = metatable, fdrcutoffvalue = fdrcutoffvalue)
 
         ## Expanded out Code to for loop to sort the metatable for each comp
-        hm1list = list()
+        hm1list <- list()
         for (i in seq_len(length(pos_outlier_analysis_out))){
-            plottable = metatable[do.call(order, c(decreasing = TRUE,
+            plottable <- metatable[do.call(order, c(decreasing = TRUE,
                                 data.frame(metatable[,c(i,
                                     setdiff(seq_len(ncol(metatable)),i))]))),]
-            hm1list[[i]] = outlier_heatmap(
+            hm1list[[i]] <- outlier_heatmap(
                 outlier_analysis_out = pos_outlier_analysis_out,
                 analysis_num = i, counttab = posfractiontab,
                 metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
         }
-        hm1 = unlist(hm1list)
+        hm1 <- unlist(hm1list)
 
         ## Negative/nonaggregated workflow
         if (analyze_negative_outliers == TRUE) {
-            neg_count_outliers_out = count_outliers(groupings, outliertab,
+            neg_count_outliers_out <- count_outliers(groupings, outliertab,
                 aggregate_features = FALSE)
-            neggrouptablist = neg_count_outliers_out$grouptablist
-            negfractiontab = neg_count_outliers_out$fractiontab
+            neggrouptablist <- neg_count_outliers_out$grouptablist
+            negfractiontab <- neg_count_outliers_out$fractiontab
 
-            neg_outlier_analysis_out = outlier_analysis(
+            neg_outlier_analysis_out <- outlier_analysis(
                 grouptablist = neggrouptablist,
-                fraction_table = negfractiontab, fraction_samples_cutoff = 0.3)
+                fraction_table = negfractiontab,
+                fraction_samples_cutoff = fraction_samples_cutoff)
 
             ## Expanded out Code to for loop to sort the metatable for each comp
-            hm2list = list()
+            hm2list <- list()
             for (i in seq_len(length(pos_outlier_analysis_out))){
-                plottable = metatable[do.call(order, c(decreasing = TRUE,
+                plottable <- metatable[do.call(order, c(decreasing = TRUE,
                                     data.frame(metatable[,c(i,
                                     setdiff(seq_len(ncol(metatable)),i))]))),]
-                hm2list[[i]] = outlier_heatmap(
+                hm2list[[i]] <- outlier_heatmap(
                     outlier_analysis_out = neg_outlier_analysis_out,
                     analysis_num = i, counttab = negfractiontab,
                     metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
             }
-            hm2 = unlist(hm2list)
+            hm2 <- unlist(hm2list)
         }
 
         ## Return the output - parameterized to output pos/neg as appropriate
@@ -762,53 +729,53 @@ deva <- function(se, analyze_negative_outliers = FALSE,
 
     ## With feature aggregation - we do positive and negative separtely
     } else {
-        pos_count_outliers_out = count_outliers(groupings, outliertab,
+        pos_count_outliers_out <- count_outliers(groupings, outliertab,
             aggregate_features = TRUE, feature_delineator = feature_delineator)
-        posgrouptablist = pos_count_outliers_out$grouptablist
-        posfractiontab = pos_count_outliers_out$fractiontab
+        posgrouptablist <- pos_count_outliers_out$grouptablist
+        posfractiontab <- pos_count_outliers_out$fractiontab
 
-        pos_outlier_analysis_out = outlier_analysis(
+        pos_outlier_analysis_out <- outlier_analysis(
             grouptablist = posgrouptablist,
             fraction_table = posfractiontab,
             fraction_samples_cutoff = fraction_samples_cutoff)
 
         ## Expanded out Code to for loop to sort the metatable for each comp
-        hm1list = list()
+        hm1list <- list()
         for (i in seq_len(length(pos_outlier_analysis_out))){
-            plottable = metatable[do.call(order, c(decreasing = TRUE,
+            plottable <- metatable[do.call(order, c(decreasing = TRUE,
                                 data.frame(metatable[,c(i,
                                 setdiff(seq_len(ncol(metatable)),i))]))),]
-            hm1list[[i]] = outlier_heatmap(
+            hm1list[[i]] <- outlier_heatmap(
                 outlier_analysis_out = pos_outlier_analysis_out,
                 analysis_num = i, counttab = posfractiontab,
                 metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
         }
-        hm1 = unlist(hm1list)
+        hm1 <- unlist(hm1list)
 
         if (analyze_negative_outliers == TRUE) {
-            neg_count_outliers_out = count_outliers(groupings, outliertab,
+            neg_count_outliers_out <- count_outliers(groupings, outliertab,
                 aggregate_features = TRUE,
                 feature_delineator = feature_delineator)
-            neggrouptablist = neg_count_outliers_out$grouptablist
-            negfractiontab = neg_count_outliers_out$fractiontab
+            neggrouptablist <- neg_count_outliers_out$grouptablist
+            negfractiontab <- neg_count_outliers_out$fractiontab
 
-            neg_outlier_analysis_out = outlier_analysis(
+            neg_outlier_analysis_out <- outlier_analysis(
                 grouptablist = neggrouptablist,
                 fraction_table = negfractiontab,
                 fraction_samples_cutoff = fraction_samples_cutoff)
 
             ## Expanded out Code to for loop to sort the metatable for each comp
-            hm2list = list()
+            hm2list <- list()
             for (i in seq_len(length(pos_outlier_analysis_out))){
-                plottable = metatable[do.call(order, c(decreasing = TRUE,
+                plottable <- metatable[do.call(order, c(decreasing = TRUE,
                                     data.frame(metatable[,c(i,
                                     setdiff(seq_len(ncol(metatable)),i))]))),]
-                hm2list[[i]] = outlier_heatmap(
+                hm2list[[i]] <- outlier_heatmap(
                     outlier_analysis_out = neg_outlier_analysis_out,
                     analysis_num = i, counttab = negfractiontab,
                     metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
             }
-            hm2 = unlist(hm2list)
+            hm2 <- unlist(hm2list)
         }
 
         if (analyze_negative_outliers != TRUE) {
@@ -856,27 +823,27 @@ deva_results <- function(deva_out, ID = NULL, type = NULL) {
     # If just deva_out is input - return names of analyses performed
     if ((is.null(ID))) {
         if(is.null(type)){
-            out1 = names(deva_out[[1]])
+            out1 <- names(deva_out[[1]])
         } else {
-            if(type == "table"){out1 = names(deva_out[[1]])}
-            if(type == "heatmap"){out1 = names(deva_out[[2]])}
+            if(type == "table"){out1 <- names(deva_out[[1]])}
+            if(type == "heatmap"){out1 <- names(deva_out[[2]])}
         }
     } else {
         ## Determine whether outputting the table or heatmap
         if(is.null(type)) {stop("Please input data type to output
                                 <\"table\" | \"heatmap\">")}
-        if(type == "table"){datacat = 1}
-        if(type == "heatmap"){datacat = 2}
+        if(type == "table"){datacat <- 1}
+        if(type == "heatmap"){datacat <- 2}
 
-        grab = grep(pattern = ID, names(deva_out[[datacat]]))
+        grab <- grep(pattern = ID, names(deva_out[[datacat]]))
 
-        if (length(grab) == 1) {out1 = deva_out[[datacat]][[grab]]}
-        if (length(grab) == 0) {stop(paste0("No analyses have name with", ID,
-                        " Please check output names <deva_results(deva_out)>"))}
+        if (length(grab) == 1) {out1 <- deva_out[[datacat]][[grab]]}
+        if (length(grab) == 0) {stop("No analyses have name with", ID,
+                        " Please check output names <deva_results(deva_out)>")}
         if (length(grab) > 1) {
-            warning(paste0("Multiple analyses matched ", ID,
-                            ", outputting named list of selected analyses"))
-            out1 = deva_out[[datacat]][grab]
+            warning("Multiple analyses matched ", ID,
+                            ", outputting named list of selected analyses")
+            out1 <- deva_out[[datacat]][grab]
         }
     }
 

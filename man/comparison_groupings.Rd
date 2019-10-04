@@ -18,6 +18,6 @@ Create all of the groups based on the input metadata
 }
 \examples{
 data("sample_annotationdata")
-groupings = comparison_groupings(sample_annotationdata)
+groupings <- comparison_groupings(sample_annotationdata)
 }
 \keyword{outliers}

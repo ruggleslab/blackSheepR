@@ -47,7 +47,7 @@ suppressPackageStartupMessages(library(SummarizedExperiment))
 data("sample_phosphodata")
 data("sample_annotationdata")
 
-se = SummarizedExperiment(
+se <- SummarizedExperiment(
     assays = list(counts = as.matrix(sample_phosphodata[1:1000,])),
     colData = DataFrame(sample_annotationdata))
 

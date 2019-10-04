@@ -67,7 +67,8 @@ count data, listed along the y-axis. Each column will then be a comparison to
 perform, with the values of the column being some form of binary system 
 indicating the samples belonging to each sub group.
 NOTE - that these should be strings. It's more informative if your columns 
-actually contain useful information such as "high"/"low", "mutant"/"WT", etc.
+actually contain useful information such as "high"/"low", "mutant"/"WT", etc. 
+as oppposed to "1/0" or any other non-descriptive binary.
 ```{r annotation example}
 data("sample_annotationdata")
 sample_annotationdata[1:5,]
@@ -86,8 +87,8 @@ helper functions that can assist with this formatting.
 # Example Workflow - Phosphoprotein
 In the following section - we will go through an example of using outlier 
 analysis using Phosphoprotein data. The inputted data is being supplied from 
-[Github](https://github.com/ruggleslab/blacksheep_supp/tree/master) and is from 
-breast cancer data from TCGA and CPTAC.
+[Github](https://github.com/ruggleslab/blacksheep_supp/tree/master) and is 
+originally sourced using breast cancer data from TCGA and CPTAC.
 [doi:10.1038/nature18003](https://www.nature.com/articles/nature18003)
 
 ## Input Data
@@ -95,7 +96,7 @@ breast cancer data from TCGA and CPTAC.
 Read in the Annotation table.
 ```{r read in data - phospho, echo = TRUE}
 data(sample_annotationdata)
-comptable = sample_annotationdata
+comptable <- sample_annotationdata
 comptable[1:5,]
 dim(comptable)
 ```
@@ -109,7 +110,7 @@ relate to later analysis, as blacksheep will AGGREGATE on this data and
 collapse the data onto the primary feature. More on this later.
 ```{r}
 data(sample_phosphodata)
-phosphotable = sample_phosphodata
+phosphotable <- sample_phosphodata
 phosphotable[1:5,1:5]
 dim(phosphotable)
 ```
@@ -125,19 +126,19 @@ and the annotation data must be formatted as a DATAFRAME.
 ```{r summarized experiment}
 suppressPackageStartupMessages(library(SummarizedExperiment))
 
-blacksheep_SE = SummarizedExperiment(
+blacksheep_SE <- SummarizedExperiment(
     assays=list(counts=as.matrix(phosphotable)), 
     colData=DataFrame(comptable))
 blacksheep_SE
 ```
 
-## Running deva
-The deva function has a number of steps to it that are individually 
+## Running deva (differential extreme value analysis)
+The `deva` function has a number of steps to it that are individually 
 described below. Note though that the individual steps only need to be used for 
 specific query or alteration. In the general case, the `deva` function on 
 its own should be sufficient for the desired analysis.
 ```{r deva, fig.keep="none"}
-deva_out = deva(se = blacksheep_SE, 
+deva_out <- deva(se = blacksheep_SE, 
     analyze_negative_outliers = FALSE, aggregate_features = TRUE, 
     feature_delineator = "-", fraction_samples_cutoff = 0.3, 
     fdrcutoffvalue = 0.1)
@@ -150,7 +151,7 @@ outliers.
 * aggregate_features - Should the analysis collapse features to a primary term. 
 Useful for phosphosites on proteins, isotypes of proteins, etc.
 * feature_delineator - The character marker that delineates the primary feature 
-when useing the <aggregate_features> parameter
+when using the <aggregate_features> parameter
 * fraction_samples_cutoff - how many samples in a group must contain an outlier 
 for the feature to be considered significant. This parameter is used to avoid 
 overbiased results from single samples. (see appendix)
@@ -191,7 +192,7 @@ The other parameters for deva_out are `ID` and `type`. `ID` is a keyword to
 grab the desired analysis. `type` is either `table` or `heatmap` and specifies 
 which analysis type that you want to grab.
 ```{r}
-subanalysis_Her2 = deva_results(deva_out, ID = "Her2", type = "table")
+subanalysis_Her2 <- deva_results(deva_out, ID = "Her2", type = "table")
 head(subanalysis_Her2)
 ```
 
@@ -201,17 +202,17 @@ a SummarizedExperiment object), `deva` will output a table of analysis if there
 were any applicable results. 
 One example of a table is as follows:
 ```{r}
-subanalysis_Her2 = deva_results(deva_out, ID = "Her2", type = "table")
+subanalysis_Her2 <- deva_results(deva_out, ID = "Her2", type = "table")
 head(subanalysis_Her2)
 ```
 The output in order is:
 * col1 - the list of genes
 * col2-3 - the pvalue of the gene being significantly different, the column it 
-appears in is indicative of the measure of the gene being higher in group1 or 
-group2.
+    appears in is indicative of the measure of the gene being higher in group1 
+    or group2.
 * col4-5 - the FDR value for that pvalue
 * col6-9 - the raw data behind the statisical test, showing how many outliers 
-and nonoutliers there are for each group.
+    and nonoutliers there are for each group.
 
 The heatmaps serve as a snapshot of the significant genes that met the 
 parameterized fdr cutoff in the `deva` function call. They can be accessed 
@@ -219,7 +220,7 @@ in a similar manner to the analysis tables. NOTE though that there will only be
 a heatmap if there were ANY significant genes. If there were no genes that met 
 the fdr cut off - then there will be no heatmap generated.
 ```{r}
-subanalysis_Her2_HM = deva_results(deva_out, ID = "Her2", type = "heatmap")
+subanalysis_Her2_HM <- deva_results(deva_out, ID = "Her2", type = "heatmap")
 subanalysis_Her2_HM
 ```
 
@@ -256,7 +257,7 @@ the first subcategory encounted moving down the column. This order will matter
 later on when you look at comparisons, but this information will be contained 
 in the ouput table to avoid confusion, more on this later.
 ```{r groupings - phospho}
-groupings = comparison_groupings(comptable)
+groupings <- comparison_groupings(comptable)
 ## Print out the first 6 samples in each of our first 5 groupings
 lapply(groupings, head)[1:5]
 ```
@@ -275,14 +276,14 @@ if the analyze_negative_outliers parameter is turned ON
 
 ```{r make outlier table - phospho}
 ## Perform the function
-reftable_function_out = make_outlier_table(phosphotable,
+reftable_function_out <- make_outlier_table(phosphotable,
                                         analyze_negative_outliers = FALSE)
 ## See the names of the outputted objects
 names(reftable_function_out)
 ## Assign them to individual variables
-outliertab = reftable_function_out$outliertab
-upperboundtab = reftable_function_out$upperboundtab
-sampmedtab = reftable_function_out$sampmedtab
+outliertab <- reftable_function_out$outliertab
+upperboundtab <- reftable_function_out$upperboundtab
+sampmedtab <- reftable_function_out$sampmedtab
 
 ## Note we will only use the outlier table - which looks like this now
 outliertab[1:5,1:5]
@@ -314,11 +315,11 @@ ex) 1,0,0 >> 1/3
 ex) 1,0,NA >> 1/2
 
 ```{r groupingtablist - phospho}
-count_outliers_out = count_outliers(groupings, outliertab, 
+count_outliers_out <- count_outliers(groupings, outliertab, 
                         aggregate_features = TRUE, feature_delineator = "-")
-grouptablist = count_outliers_out$grouptablist
-aggoutliertab = count_outliers_out$aggoutliertab
-fractiontab = count_outliers_out$fractiontab
+grouptablist <- count_outliers_out$grouptablist
+aggoutliertab <- count_outliers_out$aggoutliertab
+fractiontab <- count_outliers_out$fractiontab
 
 names(grouptablist)
 ```
@@ -357,7 +358,7 @@ analysis by only picking out features that have multiple samples with outliers.
 NOTE that this can be omitted by just leaving the `fraction_table` parameter 
 out or as a `NULL`
 ```{r outlier analysis - phospho}
-outlier_analysis_out = outlier_analysis(grouptablist = grouptablist,
+outlier_analysis_out <- outlier_analysis(grouptablist = grouptablist,
                                         fraction_table = fractiontab,
                                         fraction_samples_cutoff = 0.3)
 names(outlier_analysis_out)
@@ -379,9 +380,9 @@ so you can open your own pdf and print out using the commented out code below.
 NOTE that the metatable must be in the ORDER desired, and that this function 
 will NOT order it for you.
 ```{r heatmap plotting - phospho, fig.keep="none"}
-plottable = comptable[do.call(order, c(decreasing = TRUE, 
+plottable <- comptable[do.call(order, c(decreasing = TRUE, 
                             data.frame(comptable[,1:ncol(comptable)]))),]
-hm1 = outlier_heatmap(outlier_analysis_out = outlier_analysis_out, 
+hm1 <- outlier_heatmap(outlier_analysis_out = outlier_analysis_out, 
                 counttab = fractiontab, metatable = plottable, 
                 fdrcutoffvalue = 0.1)
 
@@ -411,12 +412,12 @@ columns as they want, and the function will output a table with each
 multifactorial column turned into a number of binary columns
 
 ``` {r format annotation data2 - phospho}
-dummyannotations = data.frame(comp1 = c(1,1,2,2,3,3), 
+dummyannotations <- data.frame(comp1 = c(1,1,2,2,3,3), 
                     comp2 = c("red", "blue", "red", "blue", "green", "green"), 
                     row.names = paste0("sample", seq_len(6)))
 dummyannotations
 ## Use the make_comparison_columns function to create binary columns
-expanded_dummyannotations = make_comparison_columns(dummyannotations)
+expanded_dummyannotations <- make_comparison_columns(dummyannotations)
 expanded_dummyannotations
 ```
 

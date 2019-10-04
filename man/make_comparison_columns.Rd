@@ -23,7 +23,7 @@ ex) col1: A,B,C >> colA: A,notA,notA; colB: notB,B,notB; colC: notC,notC,C
 }
 \examples{
 data("sample_annotationdata")
-new_comparisons = make_comparison_columns(
+new_comparisons <- make_comparison_columns(
     sample_annotationdata[,1,drop=FALSE])
 }
 \keyword{outliers}

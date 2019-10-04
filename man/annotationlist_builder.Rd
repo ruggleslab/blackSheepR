@@ -18,9 +18,9 @@ return the annotation object
 Create the annotation object for plotting in a heatmap
 }
 \examples{
-metatable = data.frame(row.names = c("samp1", "samp2", "samp3", "samp4"),
+metatable <- data.frame(row.names = c("samp1", "samp2", "samp3", "samp4"),
     A = c(rep("high", 2), rep("low", 2)), B = seq(1,7,2))
-customcolorlist = list(A = c("high" = "red", "low" = "blue"),
+customcolorlist <- list(A = c("high" = "red", "low" = "blue"),
     B = circlize::colorRamp2(seq(-5, 5, length = 3),
     RColorBrewer::brewer.pal(3, "Reds")))
 annotationlist_builder(metatable, customcolorlist)
