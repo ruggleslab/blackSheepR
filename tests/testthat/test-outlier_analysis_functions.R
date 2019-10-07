@@ -11,15 +11,16 @@ test_that("grouping function works", {
 
 test_that("making the outlier table works", {
     data("sample_phosphodata")
-    reftable_function_out = make_outlier_table(sample_phosphodata)
+    reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
     outliertab = reftable_function_out$outliertab
     upperboundtab = reftable_function_out$upperboundtab
     sampmedtab = reftable_function_out$sampmedtab
 
-    expect_equal(dim(outliertab), dim(sample_phosphodata))
-    expect_equal(sum(is.na(outliertab)), sum(is.na(sample_phosphodata)))
+    expect_equal(dim(outliertab), dim(sample_phosphodata[1:1000,]))
+    expect_equal(sum(is.na(outliertab)),
+                 sum(is.na(sample_phosphodata[1:1000,])))
 
-    reftable_function_out = make_outlier_table(sample_phosphodata,
+    reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,],
                                                analyze_negative_outliers = TRUE)
     outliertab = reftable_function_out$outliertab
     upperboundtab = reftable_function_out$upperboundtab
@@ -32,7 +33,7 @@ test_that("making the outlier table works", {
 
 test_that("counting outliers works", {
     data("sample_phosphodata")
-    reftable_function_out = make_outlier_table(sample_phosphodata)
+    reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
     outliertab = reftable_function_out$outliertab
 
     data("sample_annotationdata")
@@ -51,20 +52,21 @@ test_that("counting outliers works", {
 
 test_that("making the outlier table works", {
     data("sample_phosphodata")
-    reftable_function_out = make_outlier_table(sample_phosphodata)
+    reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
     outliertab = reftable_function_out$outliertab
     upperboundtab = reftable_function_out$upperboundtab
     lowerboundtab = reftable_function_out$lowerboundtab
     sampmedtab = reftable_function_out$sampmedtab
 
-    expect_equal(dim(outliertab), dim(sample_phosphodata))
-    expect_equal(sum(is.na(outliertab)), sum(is.na(sample_phosphodata)))
+    expect_equal(dim(outliertab), dim(sample_phosphodata[1:1000,]))
+    expect_equal(sum(is.na(outliertab)),
+                 sum(is.na(sample_phosphodata[1:1000,])))
 
 })
 
 test_that("outlier analysis works", {
     data("sample_phosphodata")
-    reftable_function_out = make_outlier_table(sample_phosphodata)
+    reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
     outliertab = reftable_function_out$outliertab
 
     data("sample_annotationdata")
@@ -81,7 +83,7 @@ test_that("outlier analysis works", {
 
 test_that("plotting the heatmap works", {
     data("sample_phosphodata")
-    reftable_function_out = make_outlier_table(sample_phosphodata)
+    reftable_function_out = make_outlier_table(sample_phosphodata[1:1000,])
     outliertab = reftable_function_out$outliertab
 
     data("sample_annotationdata")
@@ -92,7 +94,8 @@ test_that("plotting the heatmap works", {
     outlier_analysis_out = outlier_analysis(grouptablist)
 
     hm1 = outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
-                    sample_phosphodata, sample_annotationdata, fdrcutoffvalue = 0.1)
+                    sample_phosphodata[1:1000,], sample_annotationdata,
+                    fdrcutoffvalue = 0.1)
 
     ## Test to see if the number of analyses that have significant genes also
     ## have heatmaps

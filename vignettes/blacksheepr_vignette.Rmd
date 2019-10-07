@@ -189,8 +189,13 @@ deva_results(deva_out)
 ```
 
 The other parameters for deva_out are `ID` and `type`. `ID` is a keyword to 
-grab the desired analysis. `type` is either `table` or `heatmap` and specifies 
-which analysis type that you want to grab.
+grab the desired analysis. `type` is one of the following options: `table` or 
+`heatmap` specifies which analysis object you want to grab, followed by the ID 
+of the specific analysis. `fraction_table` is the outputted table that shows 
+the fraction of outliers per sample per feature (NOTE that this will be the 
+same as the outlier table if no aggregation was done). `median` and `boundary` 
+return lists for the median value, and the outlier boundary value for each 
+feature.
 ```{r}
 subanalysis_Her2 <- deva_results(deva_out, ID = "Her2", type = "table")
 head(subanalysis_Her2)

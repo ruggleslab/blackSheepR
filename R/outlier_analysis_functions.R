@@ -598,7 +598,7 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 #' Run the entire blacksheep Function from Start to finish
 #' @usage deva(se, analyze_negative_outliers = FALSE,
 #'     aggregate_features = FALSE, feature_delineator = "\\\\.",
-#'     fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.01)
+#'     fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.1)
 #' @param se The SummarizedExperiment object containing the countdata and the
 #'     associated annotation data with comparisons in the colData object.
 #' @param analyze_negative_outliers DEFAULT: FALSE; Toggle the analysis of
