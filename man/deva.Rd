@@ -6,7 +6,7 @@
 \usage{
 deva(se, analyze_negative_outliers = FALSE,
     aggregate_features = FALSE, feature_delineator = "\\\\.",
-    fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.01)
+    fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.1)
 }
 \arguments{
 \item{se}{The SummarizedExperiment object containing the countdata and the
