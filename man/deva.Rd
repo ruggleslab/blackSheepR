@@ -52,7 +52,7 @@ se <- SummarizedExperiment(
     colData = DataFrame(sample_annotationdata))
 
 deva(se = se,
-    analyze_negative_outliers = FALSE, aggregate_features = TRUE,
+    analyze_negative_outliers = FALSE, aggregate_features = FALSE,
     feature_delineator = "-", fraction_samples_cutoff = 0.3,
     fdrcutoffvalue = 0.1)
 

@@ -72,13 +72,15 @@ create_heatmap <- function(counttab = counttab,
             numterms = tryCatch(length(na.omit(unique(x))),
                                 error=function(e) NULL)
             is.null(numterms) || numterms <= 10})))
+        columnannotation_height = unit(
+            min(30/length(colannotationlist), 5),"mm")
         hatop <- HeatmapAnnotation(df = data.frame(colmetatable),
             col = colannotationlist,
             na_col = "white",
             show_annotation_name = TRUE,
             annotation_name_gp = gpar(fontsize = 8, fontface="bold"),
             annotation_name_side = "left",
-            simple_anno_size = unit(min(30/length(colannotationlist), 5),"mm"),
+            simple_anno_size = columnannotation_height,
             show_legend = showlegendparam,
             annotation_legend_param = annotlegendlist)
     }
@@ -113,7 +115,9 @@ create_heatmap <- function(counttab = counttab,
             col = heatmapcolorparam,    ## Define the color scale
             row_title = "Features",                     ## Name the rows
             row_title_gp = gpar(fontsize = 8),
-            column_title = nameparam,                   ## Name the columns
+            column_title = paste(
+                strwrap(gsub("_", " ", nameparam), width = 40),
+                collapse = "\n"),
             column_title_gp = gpar(fontsize = 8),
 
             cluster_columns = colclusterparam,          ## Cluster the columns
@@ -132,9 +136,9 @@ create_heatmap <- function(counttab = counttab,
                 #legend_height = unit(2, "cm"),
                 title_gp = gpar(fontsize = 8, fontface = "bold")),
             top_annotation = hatop,
-            # height = unit(min((nrow(maptab)/2), 12),"cm"),
+            height = unit(min((nrow(maptab)/2), 12),"cm"),
             # width = unit(min(ncol(maptab), 18),"cm"),
-            heatmap_height = unit(min((nrow(maptab)/2), 12),"cm"),
+            # heatmap_height = unit(min((nrow(maptab)/0.2), 120),"mm") +
             heatmap_width = unit(min(ncol(maptab), 12),"cm")
     )
 

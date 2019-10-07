@@ -16,7 +16,7 @@ make_outlier_table(intable, analyze_negative_outliers = FALSE)
 x-axis, features along the y-axis}
 
 \item{analyze_negative_outliers}{DEFAULT: FALSE; Toggle the analysis of
-outliers in the negative direction as well. Will lead to the output of
+outliers in the negative direction. Will lead to the output of
 the outlier table containing "-1" values, in addition to negative outputs
 for boundaries and aggregate tables (if applicable)}
 }

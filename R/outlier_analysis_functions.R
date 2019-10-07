@@ -117,7 +117,7 @@ comparison_groupings <- function(comptable) {
 #' @param intable table with all of the inputted information, samples along the
 #'     x-axis, features along the y-axis
 #' @param analyze_negative_outliers DEFAULT: FALSE; Toggle the analysis of
-#'     outliers in the negative direction as well. Will lead to the output of
+#'     outliers in the negative direction. Will lead to the output of
 #'     the outlier table containing "-1" values, in addition to negative outputs
 #'     for boundaries and aggregate tables (if applicable)
 #' @return a list with varied sections depending on parameters:
@@ -635,14 +635,14 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 #'     colData = DataFrame(sample_annotationdata))
 #'
 #' deva(se = se,
-#'     analyze_negative_outliers = FALSE, aggregate_features = TRUE,
+#'     analyze_negative_outliers = FALSE, aggregate_features = FALSE,
 #'     feature_delineator = "-", fraction_samples_cutoff = 0.3,
 #'     fdrcutoffvalue = 0.1)
 #'
 #'
 deva <- function(se, analyze_negative_outliers = FALSE,
                         aggregate_features = FALSE, feature_delineator = "\\.",
-                        fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.01) {
+                        fraction_samples_cutoff = 0.3, fdrcutoffvalue = 0.1) {
 
     ## Extracting information from the SummarizedExperiment
     counttable <- assays(se)[[1]]
@@ -659,135 +659,37 @@ deva <- function(se, analyze_negative_outliers = FALSE,
     lowerboundtab <- reftable_function_out$lowerboundtab
     sampmedtab <- reftable_function_out$sampmedtab
 
-    ## If there is no aggregation of features - then just run through normal
-    ## analysis, outputting whats parameterized, withoutput as hm and tables
-    ## Running through positive and negative side if necessary
-    if (aggregate_features == FALSE) {
-        ## Positive/nonaggregated workflow
-        pos_count_outliers_out <- count_outliers(groupings, outliertab)
-        posgrouptablist <- pos_count_outliers_out$grouptablist
-        posfractiontab <- pos_count_outliers_out$fractiontab
+    ## Count the number of outliers
+    count_outliers_out <- count_outliers(groupings, outliertab,
+                                aggregate_features = aggregate_features,
+                                feature_delineator = feature_delineator)
+    grouptablist <- count_outliers_out$grouptablist
+    fractiontab <- count_outliers_out$fractiontab
 
-        pos_outlier_analysis_out <- outlier_analysis(
-            grouptablist = posgrouptablist,
-            fraction_table = posfractiontab,
-            fraction_samples_cutoff = fraction_samples_cutoff)
+    ## Perform outlier analysis
+    outlier_analysis_out <- outlier_analysis(
+        grouptablist = grouptablist,
+        fraction_table = fractiontab,
+        fraction_samples_cutoff = fraction_samples_cutoff)
 
-        hm1 <- outlier_heatmap(outlier_analysis_out = pos_outlier_analysis_out,
-                        analysis_num = NULL, counttab = posfractiontab,
-                        metatable = metatable, fdrcutoffvalue = fdrcutoffvalue)
-
-        ## Expanded out Code to for loop to sort the metatable for each comp
-        hm1list <- list()
-        for (i in seq_len(length(pos_outlier_analysis_out))){
-            plottable <- metatable[do.call(order, c(decreasing = TRUE,
-                                data.frame(metatable[,c(i,
-                                    setdiff(seq_len(ncol(metatable)),i))]))),]
-            hm1list[[i]] <- outlier_heatmap(
-                outlier_analysis_out = pos_outlier_analysis_out,
-                analysis_num = i, counttab = posfractiontab,
-                metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
-        }
-        hm1 <- unlist(hm1list)
-
-        ## Negative/nonaggregated workflow
-        if (analyze_negative_outliers == TRUE) {
-            neg_count_outliers_out <- count_outliers(groupings, outliertab,
-                aggregate_features = FALSE)
-            neggrouptablist <- neg_count_outliers_out$grouptablist
-            negfractiontab <- neg_count_outliers_out$fractiontab
-
-            neg_outlier_analysis_out <- outlier_analysis(
-                grouptablist = neggrouptablist,
-                fraction_table = negfractiontab,
-                fraction_samples_cutoff = fraction_samples_cutoff)
-
-            ## Expanded out Code to for loop to sort the metatable for each comp
-            hm2list <- list()
-            for (i in seq_len(length(pos_outlier_analysis_out))){
-                plottable <- metatable[do.call(order, c(decreasing = TRUE,
-                                    data.frame(metatable[,c(i,
-                                    setdiff(seq_len(ncol(metatable)),i))]))),]
-                hm2list[[i]] <- outlier_heatmap(
-                    outlier_analysis_out = neg_outlier_analysis_out,
-                    analysis_num = i, counttab = negfractiontab,
-                    metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
-            }
-            hm2 <- unlist(hm2list)
-        }
-
-        ## Return the output - parameterized to output pos/neg as appropriate
-        if (analyze_negative_outliers != TRUE) {
-            return(list(pos_outlier_analysis = pos_outlier_analysis_out,
-                        significant_pos_heatmaps = hm1))
-        } else {
-            return(list(pos_outlier_analysis = pos_outlier_analysis_out,
-                        significant_pos_heatmaps = hm1,
-                        neg_outlier_analysis = neg_outlier_analysis_out,
-                        significant_neg_heatmaps = hm2))
-        }
-
-    ## With feature aggregation - we do positive and negative separtely
-    } else {
-        pos_count_outliers_out <- count_outliers(groupings, outliertab,
-            aggregate_features = TRUE, feature_delineator = feature_delineator)
-        posgrouptablist <- pos_count_outliers_out$grouptablist
-        posfractiontab <- pos_count_outliers_out$fractiontab
-
-        pos_outlier_analysis_out <- outlier_analysis(
-            grouptablist = posgrouptablist,
-            fraction_table = posfractiontab,
-            fraction_samples_cutoff = fraction_samples_cutoff)
-
-        ## Expanded out Code to for loop to sort the metatable for each comp
-        hm1list <- list()
-        for (i in seq_len(length(pos_outlier_analysis_out))){
-            plottable <- metatable[do.call(order, c(decreasing = TRUE,
-                                data.frame(metatable[,c(i,
+    ## Expanded out Code to for loop to sort the metatable for each comp
+    hm1list <- list()
+    for (i in seq_len(length(outlier_analysis_out))){
+        plottable <- metatable[do.call(order, c(decreasing = TRUE,
+                            data.frame(metatable[,c(i,
                                 setdiff(seq_len(ncol(metatable)),i))]))),]
-            hm1list[[i]] <- outlier_heatmap(
-                outlier_analysis_out = pos_outlier_analysis_out,
-                analysis_num = i, counttab = posfractiontab,
-                metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
-        }
-        hm1 <- unlist(hm1list)
-
-        if (analyze_negative_outliers == TRUE) {
-            neg_count_outliers_out <- count_outliers(groupings, outliertab,
-                aggregate_features = TRUE,
-                feature_delineator = feature_delineator)
-            neggrouptablist <- neg_count_outliers_out$grouptablist
-            negfractiontab <- neg_count_outliers_out$fractiontab
-
-            neg_outlier_analysis_out <- outlier_analysis(
-                grouptablist = neggrouptablist,
-                fraction_table = negfractiontab,
-                fraction_samples_cutoff = fraction_samples_cutoff)
-
-            ## Expanded out Code to for loop to sort the metatable for each comp
-            hm2list <- list()
-            for (i in seq_len(length(pos_outlier_analysis_out))){
-                plottable <- metatable[do.call(order, c(decreasing = TRUE,
-                                    data.frame(metatable[,c(i,
-                                    setdiff(seq_len(ncol(metatable)),i))]))),]
-                hm2list[[i]] <- outlier_heatmap(
-                    outlier_analysis_out = neg_outlier_analysis_out,
-                    analysis_num = i, counttab = negfractiontab,
-                    metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
-            }
-            hm2 <- unlist(hm2list)
-        }
-
-        if (analyze_negative_outliers != TRUE) {
-            return(list(pos_outlier_analysis = pos_outlier_analysis_out,
-                        significant_pos_heatmaps = hm1))
-        } else {
-            return(list(pos_outlier_analysis = pos_outlier_analysis_out,
-                        significant_pos_heatmaps = hm1,
-                        neg_outlier_analysis = neg_outlier_analysis_out,
-                        significant_neg_heatmaps = hm2))
-        }
+        hm1list[[i]] <- outlier_heatmap(
+            outlier_analysis_out = outlier_analysis_out,
+            analysis_num = i, counttab = fractiontab,
+            metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
     }
+    hm1 <- unlist(hm1list)
+
+    return(list(outlier_analysis_out = outlier_analysis_out,
+                significant_heatmaps = hm1,
+                fraction_table = fractiontab,
+                median_value_table = sampmedtab,
+                outlier_boundary_table = c(upperboundtab, lowerboundtab)))
 
 }
 
@@ -798,7 +700,8 @@ deva <- function(se, analyze_negative_outliers = FALSE,
 #'
 #' @param deva_out output from the deva function
 #' @param ID The keyword to search through analyses and grab desired output
-#' @param type <"table" | "heatmap"> the analysis type desired
+#' @param type <"table" | "heatmap" | "fraction_table" | "median" | "boundary">
+#'     to return the desirted analysis type
 #' @return desired subset of analysis from deva
 #' @keywords outliers
 #' @export
@@ -823,28 +726,39 @@ deva_results <- function(deva_out, ID = NULL, type = NULL) {
     # If just deva_out is input - return names of analyses performed
     if ((is.null(ID))) {
         if(is.null(type)){
-            out1 <- names(deva_out[[1]])
+            out1 <- names(deva_out)
         } else {
             if(type == "table"){out1 <- names(deva_out[[1]])}
             if(type == "heatmap"){out1 <- names(deva_out[[2]])}
+            if(type == "fraction_table"){out1 <- deva_out[[3]]}
+            if(type == "median"){out1 <- deva_out[[4]]}
+            if(type == "boundary"){out1 <- deva_out[[5]]}
         }
     } else {
-        ## Determine whether outputting the table or heatmap
+        ## Determine what type of object to output
         if(is.null(type)) {stop("Please input data type to output
-                                <\"table\" | \"heatmap\">")}
+            <\"table\" | \"heatmap\" | \"fraction_table\" |
+            \"median\" | \"boundary\">")}
+
         if(type == "table"){datacat <- 1}
         if(type == "heatmap"){datacat <- 2}
 
-        grab <- grep(pattern = ID, names(deva_out[[datacat]]))
+        ## If the table of heatmap - named analyses, then search for name
+        if(datacat == 1|2) {
+            grab <- grep(pattern = ID, names(deva_out[[datacat]]))
 
-        if (length(grab) == 1) {out1 <- deva_out[[datacat]][[grab]]}
-        if (length(grab) == 0) {stop("No analyses have name with", ID,
-                        " Please check output names <deva_results(deva_out)>")}
-        if (length(grab) > 1) {
-            warning("Multiple analyses matched ", ID,
-                            ", outputting named list of selected analyses")
-            out1 <- deva_out[[datacat]][grab]
+            if (length(grab) == 1) {out1 <- deva_out[[datacat]][[grab]]}
+            if (length(grab) == 0) {stop("No analyses have name with \"", ID,
+                    "\" Please check output names <deva_results(deva_out)>")}
+            if (length(grab) > 1) {
+                warning("Multiple analyses matched ", ID,
+                                ", outputting named list of selected analyses")
+                out1 <- deva_out[[datacat]][grab]
+        }} else {
+        ## If just looking for the fraction_table, median, or boundary table
+            out1 <- deva_out[[datacat]]
         }
+
     }
 
     return(out1)

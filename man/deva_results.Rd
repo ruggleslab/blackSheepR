@@ -11,7 +11,8 @@ deva_results(deva_out, ID = NULL, type = NULL)
 
 \item{ID}{The keyword to search through analyses and grab desired output}
 
-\item{type}{<"table" | "heatmap"> the analysis type desired}
+\item{type}{<"table" | "heatmap" | "fraction_table" | "median" | "boundary">
+to return the desirted analysis type}
 }
 \value{
 desired subset of analysis from deva
