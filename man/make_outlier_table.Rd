@@ -5,9 +5,7 @@
 \title{Separate out the "i"th gene, take the bounds, and then create a column
 that says whether or not this gene is high, low, or none in a sample with
 regards to the other samples in the dataset. Repeat this for every gene to
-create a reference table.
-If Aggregating - this will output the aggregate count and fraction table
-for your reference.}
+create a reference table.}
 \usage{
 make_outlier_table(intable, analyze_negative_outliers = FALSE)
 }
@@ -32,8 +30,6 @@ Separate out the "i"th gene, take the bounds, and then create a column
 that says whether or not this gene is high, low, or none in a sample with
 regards to the other samples in the dataset. Repeat this for every gene to
 create a reference table.
-If Aggregating - this will output the aggregate count and fraction table
-for your reference.
 }
 \examples{
 data("sample_phosphodata")

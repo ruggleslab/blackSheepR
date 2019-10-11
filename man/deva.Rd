@@ -36,7 +36,10 @@ feature to be considered significant}
 \item{fdrcutoffvalue}{DEFAULT: 0.1; The FDR value for significance}
 }
 \value{
-outputs a pdf with the heatmap in the current working directory
+outputs the full output of deva, including the analysis tables, the
+    heatmaps for the analyses, the fraction table showing the fraction of
+    outliers per sample, and the median and boundary values that together
+    comprise the outlier boundary
 }
 \description{
 Run the entire blacksheep Function from Start to finish

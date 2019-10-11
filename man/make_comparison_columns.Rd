@@ -13,8 +13,8 @@ make_comparison_columns(intable)
 be multiple columns}
 }
 \value{
-an expanded table with each of the column as a binary labeling of
-    each subcatecory.
+an expanded table with each of the columns as a binary labeling of
+    each subcategory.
 }
 \description{
 Utility function that will take in columns with several subcategories,

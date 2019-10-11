@@ -1,7 +1,7 @@
 Package: blacksheepr
 Type: Package
 Title: Outlier Analysis for pairwise differential comparison
-Version: 0.99.12
+Version: 0.99.13
 Authors@R: c(person("MacIntosh", "Cornwell", 
     email="macintosh.cornwell@nyulangone.org", 	role = c("aut")), 
 	person("RugglesLab", email = "ruggleslab@gmail.com", role = "cre"))
@@ -24,7 +24,8 @@ Imports:
     viridis,
     RColorBrewer,
     ComplexHeatmap,
-    SummarizedExperiment
+    SummarizedExperiment,
+    pasilla
 Suggests: 
     testthat (>= 2.1.0),
     knitr,

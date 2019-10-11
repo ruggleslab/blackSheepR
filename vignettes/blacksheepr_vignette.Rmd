@@ -107,7 +107,9 @@ Next we need to have the actual count data that we are analyzing. Note that
 this data is made up of features - proteins - that then have a number of 
 subfeatures - phosphorylation sites. This aspect of the data will directly 
 relate to later analysis, as blacksheep will AGGREGATE on this data and 
-collapse the data onto the primary feature. More on this later.
+collapse the data onto the primary feature. More on this later. Note also that 
+this data has been prenormalized. For more on the processing of data to input 
+into `deva`, refer to the appendix.
 ```{r}
 data(sample_phosphodata)
 phosphotable <- sample_phosphodata
@@ -438,6 +440,19 @@ aggregate on to a primary feature, so the `aggregate_features` parameter should
 be left to the default `FALSE`. Also Note that if you want to output all genes 
 regardless of significance, this can be accomplished by setting the `FDRcutoff` 
 to 1, and the `fraction_value_cutoff` to 0.
+
+## Processing data for running with `deva`
+`deva` at its core explores for outliers based on the difference from the 
+median. Heavily skewed data needs to be to insure accurate analyses. 
+Blacksheepr includes a normalization function that will perform both a Median 
+of Ratios normalization in addition to a log2 transform. See below for an 
+example using the `pasilla` data set:
+``` {r normalize count data - phospho}
+library(pasilla)
+pasCts <- system.file("extdata", "pasilla_gene_counts.tsv", package="pasilla")
+cts <- as.matrix(read.csv(pasCts,sep="\t",row.names="gene_id"))
+norm_cts <- deva_normalization(cts, method = "MoR-log")
+```
 
 
 

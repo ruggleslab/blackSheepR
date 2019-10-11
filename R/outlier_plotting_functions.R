@@ -17,7 +17,7 @@
 #' @param rowclusterparam cluster the rows?
 #' @param nameparam the title on the heatmap
 #' @return prints a pdf heatmap out to the designated outpath
-#' @keywords outliers
+#' @keywords outliers blacksheepr deva
 #' @import stats grid grDevices ComplexHeatmap circlize
 #' @export
 #' @examples
@@ -33,24 +33,7 @@ create_heatmap <- function(counttab = counttab,
     colmetatable = NULL, colannotationlist = NULL, colclusterparam = FALSE,
     rowclusterparam = FALSE, nameparam) {
 
-    ## Calc. spearman correlation and use values for column clustering
-    if (colclusterparam != FALSE) {
-        ## FAILSAFE - Exlcude columns with variance of 0 for plotting
-        nearZeroVarcols <- which(vapply(counttab, var) == 0)
-        if (length(nearZeroVarcols) > 0) {
-            counttab <- counttab[,!colnames(counttab) %in%
-                                    names(nearZeroVarcols)]
-            print(paste("excluding column ", names(nearZeroVarcols),
-                " due to zero variance", sep=""))}
-        cordata <- cor(counttab, method="spearman")
-        coldistance <- dist(t(as.matrix(na.omit(cordata))),
-                            method = "euclidean")
-        colcluster <- hclust(coldistance, method = "ward.D2")
-        colclusterparam <- colcluster
-    }
-
     ## Zscore out counttable
-    #maptab = as.matrix(t(apply(counttab, 1, function(x) scale(x))))
     maptab <- as.matrix(counttab)
 
     if (rowclusterparam != FALSE) {
@@ -86,7 +69,6 @@ create_heatmap <- function(counttab = counttab,
     }
 
     ## Define the Heatmap
-    #heatmapcolorparam = colorRamp2(c(-3,0,3), c("blue", "white", "red"))
     lowcolor <- midcolor <- highcolor <-
         lowvalue <- midvalue <- highvalue <- NULL
     if(max(maptab, na.rm = TRUE) > 0) {
@@ -109,14 +91,12 @@ create_heatmap <- function(counttab = counttab,
     }
     heatmapcolorparam <- colorRamp2(
         c(lowvalue, midvalue, highvalue), c(lowcolor, midcolor, highcolor))
-    #heightparam = ifelse(nrow(rnatable) < 20,unit(1,"cm"),NULL)
 
     ht1 <- Heatmap(maptab,
             col = heatmapcolorparam,    ## Define the color scale
             row_title = "Features",                     ## Name the rows
             row_title_gp = gpar(fontsize = 8),
-            column_title = paste(
-                strwrap(gsub("_", " ", nameparam), width = 40),
+            column_title = paste(strwrap(gsub("_", " ", nameparam), width = 40),
                 collapse = "\n"),
             column_title_gp = gpar(fontsize = 8),
 
@@ -137,17 +117,12 @@ create_heatmap <- function(counttab = counttab,
                 title_gp = gpar(fontsize = 8, fontface = "bold")),
             top_annotation = hatop,
             height = unit(min((nrow(maptab)/2), 12),"cm"),
-            # width = unit(min(ncol(maptab), 18),"cm"),
-            # heatmap_height = unit(min((nrow(maptab)/0.2), 120),"mm") +
             heatmap_width = unit(min(ncol(maptab), 12),"cm")
     )
 
     ## Plot out the heatmap
-    # outplot = draw(ht1, annotation_legend_side = "bottom",
-    #                 padding = unit(c(5, 20, 5, 5), "mm"))
     outplot <- ht1
     return(outplot)
-
 }
 
 
@@ -158,7 +133,7 @@ create_heatmap <- function(counttab = counttab,
 #' @param metatable the metatable containing information for the columns
 #' @param customcolorlist DEFAULT: NULL, enter colorlist to manually set colors
 #' @return return the annotation object
-#' @keywords outliers
+#' @keywords outliers blacksheepr deva
 #' @import stats circlize RColorBrewer viridis
 #' @export
 #' @examples

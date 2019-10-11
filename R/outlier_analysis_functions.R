@@ -1,8 +1,54 @@
-################################
+##########################################
 # Name: MacIntosh Cornwell
-# Email: mcornwell1957@gmail.com
-################################
+# Email: macintosh.cornwell@nyulangone.org
+##########################################
 ## blacksheep Script File
+
+
+## DEVA NORMALIZATION
+#' Normalization of data to prepare for deva. Uses a Median of Ratio method
+#' followed by a log2 transformation.
+#'
+#' @param intable table with samples along the columns and features along the
+#'     rows.
+#' @param method DEFAULT: "MoR-log"; Method by which to normalize data in
+#'     preparation for deva. Options are <"MoR-log", "MoR", "log">. Where "MoR"
+#'     refers to the Median of ratio's. The "log" transformation is necessary
+#'     to compress heavily skewed data and allow for proper detection.
+#'     "MoR-log" as the default will perform MoR followed by a log2 transform.
+#' @return A normalized table for input into deva
+#' @keywords outliers blacksheepr deva
+#' @import stats pasilla
+#' @export
+#' @examples
+#' library(pasilla)
+#' pasCts <- system.file("extdata",
+#'     "pasilla_gene_counts.tsv", package="pasilla")
+#' cts <- as.matrix(read.csv(pasCts,sep="\t",row.names="gene_id"))
+#' norm_cts <- deva_normalization(cts, method = "MoR-log")
+deva_normalization <- function(intable, method = "MoR-log"){
+    ## Create empty outtablelist
+    normmethods <- unlist(strsplit(method, "-"))
+
+    ## Perform MoR to data if called for
+    if ("MoR" %in% normmethods) {
+        pseudoref <- log(exp(rowMeans(log(intable))))
+        norm_factor <- apply(intable, 2, function(x) {
+            exp(median((log(x) - pseudoref)[is.finite(pseudoref) & x > 0]))})
+        norm_factor <- norm_factor/exp(mean(log(norm_factor)))
+        outtable <- as.matrix(intable) %*% diag(1 / norm_factor)
+        colnames(deseq_cust_norm1) <- colnames(outtable)
+        if ("log" %in% normmethods) {
+            outtable <- log2(outtable)
+        }
+    ## If no MoR, see if we still want to log transform
+    } else {
+        if ("log" %in% normmethods) {
+            outtable <- log2(intable)
+        }
+    }
+    return(outtable)
+}
 
 
 ## MAKE COMPARISON COLUMNS
@@ -12,9 +58,9 @@
 #'
 #' @param intable table where each column has more than one subcategory, can
 #'     be multiple columns
-#' @return an expanded table with each of the column as a binary labeling of
-#'     each subcatecory.
-#' @keywords outliers
+#' @return an expanded table with each of the columns as a binary labeling of
+#'     each subcategory.
+#' @keywords outliers blacksheepr deva
 #' @import stats
 #' @export
 #' @examples
@@ -63,7 +109,7 @@ make_comparison_columns <- function(intable){
 #' @param comptable table where each column will have comparisons drawn from it
 #' @return a list with each of the groups as an entry in the list
 #'     NOTE - this list will be ncol*2 long where ncol is the number comparisons
-#' @keywords outliers
+#' @keywords outliers blacksheepr deva
 #' @import stats
 #' @export
 #' @examples
@@ -104,15 +150,11 @@ comparison_groupings <- function(comptable) {
 }
 
 
-
-
 ## MAKE REF TABLE
 #' Separate out the "i"th gene, take the bounds, and then create a column
 #' that says whether or not this gene is high, low, or none in a sample with
 #' regards to the other samples in the dataset. Repeat this for every gene to
 #' create a reference table.
-#' If Aggregating - this will output the aggregate count and fraction table
-#' for your reference.
 #'
 #' @param intable table with all of the inputted information, samples along the
 #'     x-axis, features along the y-axis
@@ -125,8 +167,7 @@ comparison_groupings <- function(comptable) {
 #'     $upperboundtab - list of upper boundaries for outliers
 #'     $lowerboundtab - list of lower boundaries of outliers
 #'     $sampmedtab - list of median value per feature
-#'
-#' @keywords outliers
+#' @keywords outliers blacksheepr deva
 #' @export
 #' @examples
 #' data("sample_phosphodata")
@@ -144,7 +185,7 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
 
         ## Save the sampname, then subset the table to just the one gene
         genename <- rownames(intable)[intablegenecount]
-        sampdat <- as.data.frame(t(intable[intablegenecount, , drop=FALSE]))
+        sampdat <- as.data.frame(t(intable[intablegenecount,, drop=FALSE]))
         sampdat$categ <- 0
         sampdat[is.na(sampdat[,1]),2] <- NA
         colnames(sampdat) <- c(genename, genename)
@@ -180,17 +221,14 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
                                         do.call(rbind, lowboundlist))
         positiveoutlierlist <- NULL
     } else {
-        negativeoutlierlist <- NULL
         positiveoutlierlist <- list(upperboundtab =
                                         do.call(rbind, uppboundlist))
+        negativeoutlierlist <- NULL
     }
     sampmedtab = do.call(rbind, sampmedlist)
 
-    output = c(list(
-                outliertab = outliertab,
-                sampmedtab = sampmedtab),
-                positiveoutlierlist,
-                negativeoutlierlist)
+    output = c(list(outliertab = outliertab, sampmedtab = sampmedtab),
+                positiveoutlierlist, negativeoutlierlist)
 
     ## Return the outputted values
     return(output)
@@ -216,7 +254,7 @@ make_outlier_table <- function(intable, analyze_negative_outliers = FALSE){
 #'     R syntax with escape characters if necessary
 #'     Ex) Protein1.Phosphosite1 uses "\\." to aggregate on Protein1
 #' @return the tabulated information of outliers per group
-#' @keywords outliers
+#' @keywords outliers blacksheepr deva
 #' @export
 #' @examples
 #'
@@ -252,7 +290,7 @@ count_outliers <- function(groupings, outliertab,
                     by = list(primary_feature = aggtabin[,"primary_feature"]),
                     function(x) sum(x==outliervalue, na.rm = TRUE))
         aggoutliertab <- data.frame(aggoutliertab[,-1],
-                            row.names = aggoutliertab[,1], check.names = FALSE)
+                        row.names = aggoutliertab[,1], check.names = FALSE)
 
         aggnonoutliertab <- aggregate(aggtabin[,c(3:ncol(aggtabin))],
                     by = list(primary_feature = aggtabin[,"primary_feature"]),
@@ -351,7 +389,7 @@ count_outliers <- function(groupings, outliertab,
 #' @param outfilepath the full string path to where the file should output to,
 #'     DEFAULT is a tempdir()
 #' @return the analysis table with p.value, fdr, and raw data per comparison
-#' @keywords outliers
+#' @keywords outliers blacksheepr deva
 #' @import stats utils
 #' @export
 #' @examples
@@ -391,13 +429,6 @@ outlier_analysis <- function(grouptablist,
         comptabtemp <- merge(group2tab, group1tab, by = "row.names")
         comptab <- data.frame(comptabtemp, row.names = comptabtemp[,1])[,2:5]
 
-        split_and_fish <- function(combined_grouptab, sidedness){
-            sigval <- ifelse(sidedness=="pos", 1, -1)
-            conttab <- matrix(unlist(combined_grouptab), nrow = 2, ncol = 2,
-                        dimnames = list(c("0", sigval), c("group1","group2")))
-            return(fisher.test(conttab, alternative = "two.sided")$p.value)
-        }
-
         sidedparam <- ifelse("1" %in% colnames(group1tab), "pos", "neg")
         statgroup <- apply(comptab, 1, split_and_fish, sidedness = sidedparam)
 
@@ -408,17 +439,6 @@ outlier_analysis <- function(grouptablist,
         #### RAW NUMBER FILTER
         ## Filter to only select features that already have a proportion of
         ## outliers greater in the ingroup
-        filter_features <- function(group1tab, group2tab) {
-            ## Apply the raw number filter to group1 > 2
-            groupprop_filter <- (
-                group1tab[,2] / (group1tab[,1] + group1tab[,2])) >
-                (group2tab[,2] / (group2tab[,1] + group2tab[,2]))
-            groupprop_filter[is.na(groupprop_filter)] <- FALSE
-            ## Return a list of genes that pass the raw number filter
-            groupprop_filter_features <- rownames(group1tab[groupprop_filter,])
-            return(groupprop_filter_features)
-        }
-
         group1prop_filter_features <- filter_features(group1tab, group2tab)
         group2prop_filter_features <- filter_features(group2tab, group1tab)
         prop_filter_features <- union(group1prop_filter_features,
@@ -426,16 +446,6 @@ outlier_analysis <- function(grouptablist,
 
         ## If we are applying the fraction table, then apply this filter too
         if (!is.null(fraction_table)){
-            fraction_filter <- function(fraction_table, groupsamps,
-                                        fraction_samples_cutoff,
-                                        groupprop_filter_features) {
-                ## apply filter fraction
-                groupfractab <- fraction_table[,groupsamps]
-                groupfractab_select <- groupfractab[rowSums(
-                    groupfractab!=0, na.rm = TRUE)/ncol(groupfractab) >
-                        fraction_samples_cutoff,]
-                return(rownames(groupfractab_select))
-            }
             group1fractab_features <- fraction_filter(fraction_table,
                                 group1samps, fraction_samples_cutoff,
                                 group1prop_filter_features)
@@ -451,23 +461,6 @@ outlier_analysis <- function(grouptablist,
 
         fishout <- fishout[rownames(fishout) %in% intersect(
             fraction_selected_genes, prop_filter_features),,drop=FALSE]
-
-        ## Add in FDR values for the pvalue metrics with failsafes for 1 and 0
-        fish_to_fdr <- function(fishout, groupprop_filter_features){
-            fishgroup <- fishout[rownames(fishout) %in%
-                                    groupprop_filter_features,, drop = FALSE]
-            ## Left in long form to maintain names and labels
-            if (nrow(fishgroup) > 1) {fdrvals <- apply(fishgroup, 2, function(x)
-                p.adjust(x, method = "BH"))
-            } else {
-                if(nrow(fishgroup) == 1){
-                    fdrvals <- fishgroup
-                } else {
-                    fdrvals <- NULL
-                }
-            }
-            return(fdrvals)
-        }
 
         ## Apply the fdr in both directions separately
         fdrvals1 <- fish_to_fdr(fishout, group1prop_filter_features)
@@ -514,8 +507,6 @@ outlier_analysis <- function(grouptablist,
 }
 
 
-
-
 ## PLOT HEATMAP with metadata, original countdata, and the outlieranalysis to
 ## pull out significant genes
 #' With the grouptablist generated by count_outliers - run through and run a
@@ -531,7 +522,7 @@ outlier_analysis <- function(grouptablist,
 #'     comparisons, will be used for annotation of the heatmap
 #' @param fdrcutoffvalue DEFAULT: 0.1; The FDR value for significance
 #' @return outputs a pdf with the heatmap in the current working directory
-#' @keywords outliers
+#' @keywords outliers blacksheepr deva
 #' @import ComplexHeatmap RColorBrewer circlize
 #' @export
 #' @examples
@@ -619,8 +610,11 @@ outlier_heatmap <- function(outlier_analysis_out, analysis_num = NULL, counttab,
 #'     considered. ex) 10 samples in ingroup - 3 need to have an outlier for
 #'     feature to be considered significant
 #' @param fdrcutoffvalue DEFAULT: 0.1; The FDR value for significance
-#' @return outputs a pdf with the heatmap in the current working directory
-#' @keywords outliers
+#' @return outputs the full output of deva, including the analysis tables, the
+#'     heatmaps for the analyses, the fraction table showing the fraction of
+#'     outliers per sample, and the median and boundary values that together
+#'     comprise the outlier boundary
+#' @keywords outliers blacksheepr deva
 #' @import ComplexHeatmap RColorBrewer circlize
 #' @rawNamespace import(SummarizedExperiment, except = c(start, end))
 #' @export
@@ -679,18 +673,15 @@ deva <- function(se, analyze_negative_outliers = FALSE,
                             data.frame(metatable[,c(i,
                                 setdiff(seq_len(ncol(metatable)),i))]))),]
         hm1list[[i]] <- outlier_heatmap(
-            outlier_analysis_out = outlier_analysis_out,
-            analysis_num = i, counttab = fractiontab,
-            metatable = plottable, fdrcutoffvalue = fdrcutoffvalue)
+            outlier_analysis_out = outlier_analysis_out, analysis_num = i,
+            counttab = fractiontab, metatable = plottable, fdrcutoffvalue)
     }
     hm1 <- unlist(hm1list)
 
     return(list(outlier_analysis_out = outlier_analysis_out,
-                significant_heatmaps = hm1,
-                fraction_table = fractiontab,
+                significant_heatmaps = hm1, fraction_table = fractiontab,
                 median_value_table = sampmedtab,
                 outlier_boundary_table = c(upperboundtab, lowerboundtab)))
-
 }
 
 ## HELPER FUNCTIONS:
@@ -703,7 +694,7 @@ deva <- function(se, analyze_negative_outliers = FALSE,
 #' @param type <"table" | "heatmap" | "fraction_table" | "median" | "boundary">
 #'     to return the desirted analysis type
 #' @return desired subset of analysis from deva
-#' @keywords outliers
+#' @keywords outliers blacksheepr deva
 #' @export
 #' @examples
 #'
