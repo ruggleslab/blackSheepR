@@ -37,7 +37,7 @@ deva_normalization <- function(intable, method = "MoR-log"){
             exp(median((log(x) - pseudoref)[is.finite(pseudoref) & x > 0]))})
         norm_factor <- norm_factor/exp(mean(log(norm_factor)))
         outtable <- as.matrix(intable) %*% diag(1 / norm_factor)
-        colnames(deseq_cust_norm1) <- colnames(outtable)
+        colnames(outtable) <- colnames(intable)
         if ("log" %in% normmethods) {
             outtable <- log2(outtable)
         }

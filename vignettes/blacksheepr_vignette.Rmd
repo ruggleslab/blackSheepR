@@ -226,7 +226,7 @@ parameterized fdr cutoff in the `deva` function call. They can be accessed
 in a similar manner to the analysis tables. NOTE though that there will only be 
 a heatmap if there were ANY significant genes. If there were no genes that met 
 the fdr cut off - then there will be no heatmap generated.
-```{r}
+```{r, fig.width = 8, fig.height = 8}
 subanalysis_Her2_HM <- deva_results(deva_out, ID = "Her2", type = "heatmap")
 subanalysis_Her2_HM
 ```
@@ -399,7 +399,7 @@ hm1 <- outlier_heatmap(outlier_analysis_out = outlier_analysis_out,
 #junk<-dev.off()
 ```
 
-```{r heatmap plotting example - phospho, fig.cap = "Example outputted Heatmap"}
+```{r hm, fig.width = 8, fig.height = 8, fig.cap = "Example outputted Heatmap"}
 hm1$print_outlieranalysis_for_PAM50_Her2__Her2_vs_PAM50_Her2__not_Her2
 ```
 
@@ -441,7 +441,7 @@ be left to the default `FALSE`. Also Note that if you want to output all genes
 regardless of significance, this can be accomplished by setting the `FDRcutoff` 
 to 1, and the `fraction_value_cutoff` to 0.
 
-## Processing data for running with `deva`
+## Processing data for running with deva
 `deva` at its core explores for outliers based on the difference from the 
 median. Heavily skewed data needs to be to insure accurate analyses. 
 Blacksheepr includes a normalization function that will perform both a Median 
