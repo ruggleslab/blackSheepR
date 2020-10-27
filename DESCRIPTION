@@ -1,7 +1,7 @@
 Package: blacksheepr
 Type: Package
 Title: Outlier Analysis for pairwise differential comparison
-Version: 1.4.0
+Version: 1.5.0
 Authors@R: c(person("MacIntosh", "Cornwell", 
     email="macintosh.cornwell@nyulangone.org", 	role = c("aut")), 
 	person("RugglesLab", email = "ruggleslab@gmail.com", role = "cre"))
