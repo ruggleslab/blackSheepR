@@ -53,4 +53,6 @@ counttab <- sample_phosphodata
 hm1 <- outlier_heatmap(outlier_analysis_out, analysis_num = NULL,
     fractiontab, metatable, fdrcutoffvalue = 0.1)
 }
+\keyword{blacksheepr}
+\keyword{deva}
 \keyword{outliers}

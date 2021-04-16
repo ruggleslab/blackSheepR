@@ -1,7 +1,7 @@
 Package: blacksheepr
 Type: Package
 Title: Outlier Analysis for pairwise differential comparison
-Version: 0.99.14
+Version: 1.0.0
 Authors@R: c(person("MacIntosh", "Cornwell", 
     email="macintosh.cornwell@nyulangone.org", 	role = c("aut")), 
 	person("RugglesLab", email = "ruggleslab@gmail.com", role = "cre"))
@@ -36,4 +36,4 @@ Depends:
     R (>= 3.6)
 biocViews: Sequencing, RNASeq, GeneExpression, Transcription, 
     DifferentialExpression, Transcriptomics
-BugReports: https://github.com/ruggleslab/blackSheepR/issues
+BugReports: https://github.com/ruggleslab/blacksheepr/issues

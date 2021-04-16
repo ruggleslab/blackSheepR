@@ -26,4 +26,6 @@ data("sample_annotationdata")
 new_comparisons <- make_comparison_columns(
     sample_annotationdata[,1,drop=FALSE])
 }
+\keyword{blacksheepr}
+\keyword{deva}
 \keyword{outliers}

@@ -61,4 +61,6 @@ deva(se = se,
 
 
 }
+\keyword{blacksheepr}
+\keyword{deva}
 \keyword{outliers}

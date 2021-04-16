@@ -277,6 +277,8 @@ count_outliers <- function(groupings, outliertab,
     ## Set factor depending on analysis - pos/neg - detected automatically
     outliervalue <- unique(unlist(outliertab))[unique(unlist(outliertab)) != 0 &
                                     !is.na(unique(unlist(outliertab)))]
+    ## Failsafe for when there are no outliers
+    if (length(outliervalue) == 0) {outliervalue <- 1}
 
     ## If aggregate is true, split on delineator, and output an outlier and
     ## nonoutlier aggregate table
@@ -654,7 +656,7 @@ deva <- function(se, analyze_negative_outliers = FALSE,
     sampmedtab <- reftable_function_out$sampmedtab
 
     ## Count the number of outliers
-    count_outliers_out <- count_outliers(groupings, outliertab,
+    count_outliers_out <- count_outliers(groupings = groupings, outliertab,
                                 aggregate_features = aggregate_features,
                                 feature_delineator = feature_delineator)
     grouptablist <- count_outliers_out$grouptablist
@@ -671,7 +673,7 @@ deva <- function(se, analyze_negative_outliers = FALSE,
     for (i in seq_len(length(outlier_analysis_out))){
         plottable <- metatable[do.call(order, c(decreasing = TRUE,
                             data.frame(metatable[,c(i,
-                                setdiff(seq_len(ncol(metatable)),i))]))),]
+                                setdiff(seq_len(ncol(metatable)),i))]))),,drop=FALSE]
         hm1list[[i]] <- outlier_heatmap(
             outlier_analysis_out = outlier_analysis_out, analysis_num = i,
             counttab = fractiontab, metatable = plottable, fdrcutoffvalue)

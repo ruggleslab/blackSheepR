@@ -37,4 +37,6 @@ deva_out = deva(se = se,
 
 deva_results(deva_out, ID = "outlieranalysis", type = "table")
 }
+\keyword{blacksheepr}
+\keyword{deva}
 \keyword{outliers}

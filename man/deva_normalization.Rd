@@ -11,7 +11,7 @@ deva_normalization(intable, method = "MoR-log")
 \item{intable}{table with samples along the columns and features along the
 rows.}
 
-\item{method}{DEFAULT: "MoR-log" Method by which to normalize data in
+\item{method}{DEFAULT: "MoR-log"; Method by which to normalize data in
 preparation for deva. Options are <"MoR-log", "MoR", "log">. Where "MoR"
 refers to the Median of ratio's. The "log" transformation is necessary
 to compress heavily skewed data and allow for proper detection.
@@ -31,4 +31,6 @@ pasCts <- system.file("extdata",
 cts <- as.matrix(read.csv(pasCts,sep="\\t",row.names="gene_id"))
 norm_cts <- deva_normalization(cts, method = "MoR-log")
 }
+\keyword{blacksheepr}
+\keyword{deva}
 \keyword{outliers}

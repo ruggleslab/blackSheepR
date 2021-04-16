@@ -40,4 +40,6 @@ upperboundtab <- reftable_function_out$upperboundtab
 lowerboundtab <- reftable_function_out$lowerboundtab
 sampmedtab <- reftable_function_out$sampmedtab
 }
+\keyword{blacksheepr}
+\keyword{deva}
 \keyword{outliers}

@@ -58,4 +58,6 @@ fractiontab <- count_outliers_out$fractiontab
 outlier_analysis_out <- outlier_analysis(grouptablist,
     fraction_table = fractiontab)
 }
+\keyword{blacksheepr}
+\keyword{deva}
 \keyword{outliers}

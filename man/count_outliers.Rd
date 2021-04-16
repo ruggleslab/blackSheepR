@@ -50,4 +50,6 @@ count_outliers_out <- count_outliers(groupings, outliertab,
 grouptablist <- count_outliers_out$grouptablist
 fractiontab <- count_outliers_out$fractiontab
 }
+\keyword{blacksheepr}
+\keyword{deva}
 \keyword{outliers}

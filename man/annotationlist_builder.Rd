@@ -25,4 +25,6 @@ customcolorlist <- list(A = c("high" = "red", "low" = "blue"),
     RColorBrewer::brewer.pal(3, "Reds")))
 annotationlist_builder(metatable, customcolorlist)
 }
+\keyword{blacksheepr}
+\keyword{deva}
 \keyword{outliers}

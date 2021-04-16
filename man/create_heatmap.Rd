@@ -38,4 +38,6 @@ create_heatmap(counttab = counttab,
     colannotationlist = NULL,colclusterparam = FALSE,
     rowclusterparam = FALSE, nameparam)
 }
+\keyword{blacksheepr}
+\keyword{deva}
 \keyword{outliers}
