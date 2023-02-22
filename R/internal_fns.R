@@ -21,7 +21,7 @@ fraction_filter <- function(fraction_table, groupsamps,
                             fraction_samples_cutoff,
                             groupprop_filter_features) {
     ## apply filter fraction
-    groupfractab <- fraction_table[,groupsamps]
+    groupfractab <- fraction_table[,groupsamps, drop=F]
     groupfractab_select <- groupfractab[rowSums(
         groupfractab!=0, na.rm = TRUE)/ncol(groupfractab) >
             fraction_samples_cutoff,]
